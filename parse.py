@@ -45,6 +45,23 @@ def parse_bit(raw):
 
 for line in lines:
 
+    splut = []
+
+    sections = line.split('01')
+    count = len(sections)
+    for i in range(count):
+        
+        if i == 0:
+            splut.append(sections[i] + '0')
+        elif i == count - 1:
+            splut.append('1' + sections[i])
+        else:
+            splut.append('1' + sections[i] + '0')
+
+        print(splut[-1:][0].count('1'), splut[-1:][0].count('0'), splut[-1:][0])
+
+
+
     stream = line
     header, body = cut_next_bit(stream)
 
@@ -66,4 +83,6 @@ for line in lines:
     ]
 
     print(parsed)
+
+    input()
 
