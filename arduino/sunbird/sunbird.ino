@@ -10,8 +10,9 @@ int delayMS = 0;
 
 void loop() {
   if (delayMS > 0) {
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(LED_BUILTIN, HIGH);
     delay(delayMS);
+    digitalWrite(LED_BUILTIN, LOW);
   }
 
   if (Serial.available() > 0) {
