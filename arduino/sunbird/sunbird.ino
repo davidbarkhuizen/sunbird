@@ -1,26 +1,30 @@
+int delayMS;
+int availableBytes;
+char receivedCommand[3];
+
 void setup() {
+  delayMS = 0;
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(9600);
 }
 
-int received = 0;
-
-int delayMS = 0;
-
 void loop() {
+
   if (delayMS > 0) {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(delayMS);
     digitalWrite(LED_BUILTIN, LOW);
+    delay(delayMS);
+  }
+  else {
+    Serial.write(8);
+    delay(1000);
   }
 
-  if (Serial.available() > 0) {
-
-    delayMS = Serial.read();
-
-    Serial.print("delay updated to: ");
-    Serial.print(delayMS);
-    Serial.println();
+  availableBytes = Serial.available();
+  if (availableBytes >= 3) {
+    Serial.readBytes(receivedCommand, 3);
+    delayMS = (int)receivedCommand[0];
+    Serial.write(delayMS);
   }
 }
