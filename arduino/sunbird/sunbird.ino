@@ -2,6 +2,10 @@ int delayMS;
 int availableBytes;
 char receivedCommand[3];
 
+char power;
+short leftRight;
+short fwdRev; 
+
 void setup() {
   delayMS = 0;
   pinMode(LED_BUILTIN, OUTPUT);
@@ -16,15 +20,18 @@ void loop() {
     digitalWrite(LED_BUILTIN, LOW);
     delay(delayMS);
   }
-  else {
-    Serial.write(8);
-    delay(1000);
-  }
 
   availableBytes = Serial.available();
   if (availableBytes >= 3) {
     Serial.readBytes(receivedCommand, 3);
-    delayMS = (int)receivedCommand[0];
-    Serial.write(delayMS);
+
+    power = receivedCommand[0];
+    leftRight = (short)receivedCommand[1];
+    fwdRev = (short)receivedCommand[2];    
+    
+    delayMS = power;
+    Serial.println(power);
+    Serial.println(leftRight);
+    Serial.println(fwdRev);
   }
 }
