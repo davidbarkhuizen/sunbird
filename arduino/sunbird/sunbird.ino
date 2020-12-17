@@ -1,7 +1,6 @@
-String data="Hello From Arduino!";
-
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(9600);
 }
 
@@ -14,8 +13,6 @@ void loop() {
     digitalWrite(LED_BUILTIN, LOW);
     delay(delayMS);
   }
-
-  digitalWrite(LED_BUILTIN, HIGH);
 
   if (Serial.available() > 0) {
 
