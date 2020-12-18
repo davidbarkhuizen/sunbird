@@ -1,5 +1,10 @@
 #include <TimerOne.h>
  
+int availableBytes;
+char receivedCommand[3];
+
+// ------------------------------
+
 //comment this out to see the demodulated waveform
 //it is useful for debugging purpose.
 #define MODULATED 1 
@@ -132,18 +137,29 @@ void setup()
   TCCR2B = _BV(WGM22) | _BV(CS20); 
   OCR2A = v;
   OCR2B = v / 2;
+
+  // ----------------------------
+
+  Serial.begin(9600);
 }
  
 void loop()
 {  
-    
+  availableBytes = Serial.available();
+  if (availableBytes >= 3) {
+    Serial.readBytes(receivedCommand, 3);
+
+    Throttle = receivedCommand[0]; // 0 to 255
+    LeftRight = (int)((short)receivedCommand[1]); // -64 to 63
+    FwdBack = (int)((short)receivedCommand[2]; // -128 to 127
+
+    Serial.println(Throttle);
+    Serial.println(LeftRight);
+    Serial.println(FwdBack);
+  }
 }
  
 void timerISR()
 {
-  Throttle = 1; //convert to 0 to 255
-  LeftRight = 0; //convert to -64 to 63
-  FwdBack = 0; //convert to -128 to 127
-   
   sendCommand(Throttle, LeftRight, FwdBack);
 }
