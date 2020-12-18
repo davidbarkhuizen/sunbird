@@ -1,3 +1,5 @@
+
+
 import serial
 import time
 import struct
@@ -17,9 +19,9 @@ def command(power, leftRight, fwdRev):
 	lr = struct.pack('>b', leftRight)[0]
 	fr = struct.pack('>b', fwdRev)[0]
 	
-	return bytes([p, lr, fr])
+	return [p, lr, fr]
 
-cmd = command(255, -64, -128)
+cmd = command(50, 0, 0)
 print(cmd)
 ser.write(cmd)
 

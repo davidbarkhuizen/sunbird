@@ -126,8 +126,8 @@ void setup()
 	Timer1.initialize(DURATION);
 	Timer1.attachInterrupt(timerISR);
 	 
-	//setup PWM: f=38Khz PWM=0.5  
-	byte v = 8000 / 38;
+	//setup PWM: f=38 || 57 Khz PWM=0.5  
+	byte v = 8000 / 57;
 	TCCR2A = _BV(WGM20);
 	TCCR2B = _BV(WGM22) | _BV(CS20); 
 	OCR2A = v;
