@@ -1,12 +1,9 @@
 #include <TimerOne.h>
-
-int availableBytes;
-char receivedCommand[3];
-
-char power;
-short leftRight;
-short fwdBack; 
-
+ 
+//comment this out to see the demodulated waveform
+//it is useful for debugging purpose.
+#define MODULATED 1 
+ 
 const int IR_PIN = 3;
 const unsigned long DURATION = 180000l;
 const int HEADER_DURATION = 2000;
@@ -14,36 +11,79 @@ const int HIGH_DURATION = 380;
 const int ZERO_LOW_DURATION = 220;
 const int ONE_LOW_DURATION = 600;
 const byte ROTATION_STATIONARY = 60;
-const byte CAL_BYTE = 52;
+const byte CAL_BYTE = 52; 
+ 
+int Throttle, LeftRight, FwdBack;
 
 void sendHeader()
 {
-  digitalWrite(IR_PIN, HIGH);
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, HIGH);
+  #else
+    TCCR2A |= _BV(COM2B1);
+  #endif
+   
   delayMicroseconds(HEADER_DURATION);
-
-  digitalWrite(IR_PIN, LOW);
+   
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, LOW);
+  #else
+    TCCR2A &= ~_BV(COM2B1);
+  #endif
+   
   delayMicroseconds(HEADER_DURATION);
-  
-  digitalWrite(IR_PIN, HIGH);
+   
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, HIGH);
+  #else
+    TCCR2A |= _BV(COM2B1);
+  #endif
+   
   delayMicroseconds(HIGH_DURATION);
-  
-  digitalWrite(IR_PIN, LOW);
+   
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, LOW);
+  #else
+    TCCR2A &= ~_BV(COM2B1);
+  #endif
 }
  
 void sendZero()
 {
   delayMicroseconds(ZERO_LOW_DURATION);
-  digitalWrite(IR_PIN, HIGH);
+ 
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, HIGH);
+  #else  
+    TCCR2A |= _BV(COM2B1);
+  #endif
+   
   delayMicroseconds(HIGH_DURATION);
-  digitalWrite(IR_PIN, LOW);
+   
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, LOW);
+  #else
+    TCCR2A &= ~_BV(COM2B1);
+  #endif
 }
  
 void sendOne()
 {
   delayMicroseconds(ONE_LOW_DURATION);
-  digitalWrite(IR_PIN, HIGH);
+   
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, HIGH);
+  #else
+    TCCR2A |= _BV(COM2B1);
+  #endif
+   
   delayMicroseconds(HIGH_DURATION);
-  digitalWrite(IR_PIN, LOW);  
+   
+  #ifndef MODULATED
+    digitalWrite(IR_PIN, LOW);  
+  #else
+    TCCR2A &= ~_BV(COM2B1);
+  #endif
 }
  
 void sendCommand(int throttle, int leftRight, int forwardBackward)
@@ -76,9 +116,9 @@ void sendCommand(int throttle, int leftRight, int forwardBackward)
     if (b > 0) sendOne(); else sendZero();
   } 
 }
-
-void setup() {
-
+ 
+void setup()
+{
   pinMode(IR_PIN, OUTPUT);
   digitalWrite(IR_PIN, LOW);
  
@@ -86,29 +126,24 @@ void setup() {
   Timer1.initialize(DURATION);
   Timer1.attachInterrupt(timerISR);
    
-  //setup PWM: f = [38 | 57] Khz PWM=0.5  
-  byte v = 8000 / 57;
+  //setup PWM: f=38 || 57 Khz PWM=0.5  
+  byte v = 8000 / 38;
   TCCR2A = _BV(WGM20);
   TCCR2B = _BV(WGM22) | _BV(CS20); 
   OCR2A = v;
   OCR2B = v / 2;
-  
-//  Serial.begin(9600);
 }
-
-void loop() {
-
-//  availableBytes = Serial.available();
-//  if (availableBytes >= 3) {
-//    Serial.readBytes(receivedCommand, 3);
-//
-//    power = receivedCommand[0];
-//    leftRight = (short)receivedCommand[1];
-//    fwdBack = (short)receivedCommand[2];    
-//  }
+ 
+void loop()
+{  
+    
 }
-
-  void timerISR() {
-  sendCommand(150, 0, 0);
-  // sendCommand((int)power, (int)leftRight, (int)fwdBack);
+ 
+void timerISR()
+{
+  Throttle = 1; //convert to 0 to 255
+  LeftRight = 0; //convert to -64 to 63
+  FwdBack = 0; //convert to -128 to 127
+   
+  sendCommand(Throttle, LeftRight, FwdBack);
 }
