@@ -4,11 +4,11 @@ import serial
 import time
 import struct
 
-print('initializing')
+print('initializing serial connection...')
 ser = serial.Serial("/dev/ttyACM0", 9600)  # ls /dev/tty/ACM*
 ser.baudrate=9600
 time.sleep(2)
-print('initialized')
+print('serial connection initialized.')
 
 def command(power, leftRight, fwdRev):
 	# power       [0, 255]
@@ -21,7 +21,7 @@ def command(power, leftRight, fwdRev):
 	
 	return [p, lr, fr]
 
-cmd = command(50, 0, 0)
+cmd = command(20, 0, 0)
 print(cmd)
 ser.write(cmd)
 
