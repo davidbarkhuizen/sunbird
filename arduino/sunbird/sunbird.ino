@@ -151,7 +151,7 @@ void loop()
 
     Throttle = receivedCommand[0]; // 0 to 255
     LeftRight = (int)((short)receivedCommand[1]); // -64 to 63
-    FwdBack = (int)((short)receivedCommand[2]; // -128 to 127
+    FwdBack = (int)((short)receivedCommand[2]); // -128 to 127
 
     Serial.println(Throttle);
     Serial.println(LeftRight);
