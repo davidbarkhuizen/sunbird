@@ -8,6 +8,7 @@ import time
 import struct
 
 parser = argparse.ArgumentParser(description='sunbird control gateway server')
+parser.add_argument('--host', help='host, e.g. 0.0.0.0 or 127.0.0.1')
 parser.add_argument('--port', help='linux serial device, e.g. /dev/ttyACM0, /dev/ttyUSB1')
 parser.add_argument('--baud', help='baud rate in bits per second, e.g 9600')
 args = parser.parse_args()
@@ -50,8 +51,4 @@ ser = serial.Serial(serialInterface, baudRate)
 ser.baudrate = baudRate
 print('initialized.')
 
-app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'sunbird.sqlite'),
-    )
-app.run()
+app.run(host, port)
