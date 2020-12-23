@@ -43,7 +43,7 @@ def post():
     content = request.json
     print(f'command received: {content}')
     cmd = command(content['hover'], content['rotate'], content['thrust'])
-    print('sending over serial...', cmd)
+    print(f'transmitting {cmd} over serial interface {serialInterface}...',)
     ser.write(cmd)
     print('sent.')
     
