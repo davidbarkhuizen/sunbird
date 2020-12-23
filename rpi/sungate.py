@@ -10,16 +10,10 @@ import struct
 parser = argparse.ArgumentParser(description='sunbird control gateway server')
 parser.add_argument('--port', help='linux serial device, e.g. /dev/ttyACM0, /dev/ttyUSB1')
 parser.add_argument('--baud', help='baud rate in bits per second, e.g 9600')
-
 args = parser.parse_args()
 
 serialInterface = args.port
 baudRate = args.baud 
-
-print(f'initializing serial connection on {serialInterface} @ {baudRate} baud rate...')
-ser = serial.Serial(serialInterface, baudRate)
-ser.baudrate = baudRate
-print('initialized.')
 
 def command(power, leftRight, fwdRev):
     # power       [0, 255]
@@ -33,10 +27,6 @@ def command(power, leftRight, fwdRev):
     return [p, lr, fr]
 
 app = Flask(__name__)
-app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'sunbird.sqlite'),
-    )
 
 @app.route('/', methods = ['GET'])
 def get():
@@ -53,3 +43,15 @@ def post():
     print('sent.')
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
+
+
+print(f'initializing serial connection on {serialInterface} @ {baudRate} baud rate...')
+ser = serial.Serial(serialInterface, baudRate)
+ser.baudrate = baudRate
+print('initialized.')
+
+app.config.from_mapping(
+        SECRET_KEY='dev',
+        DATABASE=os.path.join(app.instance_path, 'sunbird.sqlite'),
+    )
+app.run()
