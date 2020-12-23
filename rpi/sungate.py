@@ -8,12 +8,16 @@ import time
 import struct
 
 parser = argparse.ArgumentParser(description='sunbird control gateway server')
-parser.add_argument('--host', help='host, e.g. 0.0.0.0 or 127.0.0.1')
-parser.add_argument('--port', help='linux serial device, e.g. /dev/ttyACM0, /dev/ttyUSB1')
+parser.add_argument('--host', help='host to server as, e.g. 0.0.0.0 or 127.0.0.1')
+parser.add_argument('--port', help='TCIP/IP port to listen on')
+parser.add_argument('--serial', help='linux serial device, e.g. /dev/ttyACM0, /dev/ttyUSB1')
 parser.add_argument('--baud', help='baud rate in bits per second, e.g 9600')
 args = parser.parse_args()
 
-serialInterface = args.port
+host = args.host 
+port = args.port
+
+serialInterface = args.serial
 baudRate = args.baud 
 
 def command(power, leftRight, fwdRev):
