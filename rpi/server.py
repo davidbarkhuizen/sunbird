@@ -5,7 +5,7 @@ import serial
 import time
 import struct
 
-serialInterface = '/dev/ttyUSB0' # '/dev/ttyUSB0' '/dev/ttyACM0' '/dev/ttyUSB1'
+serialInterface = '/dev/ttyUSB1' # '/dev/ttyUSB0' '/dev/ttyACM0' '/dev/ttyUSB1'
 baudRate = 9600
 initializationDelayS = 2
 
