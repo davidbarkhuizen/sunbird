@@ -35,20 +35,25 @@ app = Flask(__name__)
 
 @app.route('/', methods = ['GET'])
 def get():
-    return 'sunbird'
+    return 'sunbird-server'
 
 @app.route('/', methods = ['POST'])
 def post():
 
     content = request.json
-    print(f'command received: {content}')
+    print(f'command received via HTTP POST: {content}')
     cmd = command(content['hover'], content['rotate'], content['thrust'])
-    print(f'transmitting {cmd} over serial interface {serialInterface}...',)
+    print(f'transmitting command to ground station over serial interface: {cmd}',)
     ser.write(cmd)
     print('sent.')
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
+# -----------------------------------
+
+print('-' * 80)
+print('sunbird-server')
+print('-' * 80)
 
 print(f'initializing serial connection on {serialInterface} @ {baudRate} baud rate...')
 ser = serial.Serial(serialInterface, baudRate)

@@ -40,6 +40,11 @@ Model|107G Phantom
 Battery|3.7 V, 150 mAh Li-poly
 Charging Time|40 mins
 Flying Time|5-6 mins
+Length|220 mm
+Width|38 mm
+Height|98 mm
+Main Rotor|190 mm
+Tail Rotor|30 mm
 OEM link|http://www.symatoys.com/goodshow/syma-s107g-phantom.html
 
 This model is [available from amazon.com](https://www.amazon.com/s?k=Syma+S107G) from a number of retailers for a price in the range of 20 - 25 USD, as of 2020/12/17.
