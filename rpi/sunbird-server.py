@@ -31,13 +31,12 @@ def post():
 
     content = request.json
     print(f'command received via HTTP POST: {content}')
-    cmd = command(content['hover'], content['rotate'], )
 
     # power       [0, 255]
     # leftRight   [-64, 63]
     # fwdRev      [-128, 127]
 
-    return [
+    cmd = [
         struct.pack('>B', content['thrust'])[0],
         struct.pack('>b', content['leftright'])[0],
         struct.pack('>b', content['fwdrev'])[0]
