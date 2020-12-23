@@ -1,3 +1,5 @@
+import argparse
+
 from flask import Flask, request, jsonify, json
 import os
 
@@ -5,15 +7,19 @@ import serial
 import time
 import struct
 
-serialInterface = '/dev/ttyUSB1' # '/dev/ttyUSB0' '/dev/ttyACM0' '/dev/ttyUSB1'
-baudRate = 9600
-initializationDelayS = 2
+parser = argparse.ArgumentParser(description='sunbird control gateway server')
+parser.add_argument('--port', help='linux serial device, e.g. /dev/ttyACM0, /dev/ttyUSB1')
+parser.add_argument('--baud', help='baud rate in bits per second, e.g 9600')
 
-print('initializing serial connection...')
+args = parser.parse_args()
+
+serialInterface = args.port
+baudRate = args.baud 
+
+print(f'initializing serial connection on {serialInterface} @ {baudRate} baud rate...')
 ser = serial.Serial(serialInterface, baudRate)
-ser.baudrate=baudRate
-time.sleep(initializationDelayS)
-print('serial connection initialized.')
+ser.baudrate = baudRate
+print('initialized.')
 
 def command(power, leftRight, fwdRev):
     # power       [0, 255]
@@ -40,11 +46,10 @@ def get():
 def post():
 
     content = request.json
-    print(content)
-   
+    print(f'command received: {content}')
     cmd = command(content['hover'], content['rotate'], content['thrust'])
-    print('sending', cmd)
+    print('sending over serial...', cmd)
     ser.write(cmd)
-    print('sent')
+    print('sent.')
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
