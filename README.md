@@ -2,6 +2,8 @@
 
 ## Acknowledgements
 
+### Kerry D Wong
+
 This project draws heavily on work done by [Kerry D Wong](http://www.kerrywong.com/about/) - who reverse engineered the IR communications protocol used by the Syma S107G, built a reference control circuit that implements that protocol, and then [made her research publicly available](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/).
 
 ## Goals
@@ -48,9 +50,47 @@ This model is [available from amazon.com](https://www.amazon.com/s?k=Syma+S107G)
 
 #### Reverse Engineering & Analysis of Infra Red Communications
 
+[Kerry D Wong](http://www.kerrywong.com/about/) - who reverse engineered the IR communications protocol used by the Syma S107G, built a reference control circuit that implements that protocol, and then [made her research publicly available](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/):
+
+The protocol supports two kHz channels: 38 kHz or 57 kHz.
+
+- command signals are sent at 184 ms intervals.  
+- the IR signal is modulated at roughly 38 kHz
+- the carrier waveform has a duty cycle of 50%
+- each control signal consists of 34 pulses
+  - two-pulse (bit) header (1x2=2)
+  - 4 bytes of data (4*8=32)
+- ones and zeros are distinguished by the duration of the low
+  
+Common to Both Channels
+parameter|value
+---------|-----
+Header High Duration|2.04 ms|2.04 ms
+Header Low Duration|2 us|2 us
+Pulse width|380 us|380 us
+Low duration for 0|220 us|220 us
+  
+Differing by Channel
+parameter|38kHz|57kHz
+---------|-----|-----
+Command duration|180 ms|160 ms
+Low duration for 1|600 us|660 us
+
+The 4-byte control signal contains 4 components:
+
+byte|parameter|rotor|range
+----|---------|-----|-----
+1|rotate|main|-64..63
+2|thrust|rear|-128..127
+3|lift|main|0..255
+4|offset|main|0.255
+
+- lift (up/down)
+- thrust (forward/back)
+- rotation (clockwise, counter-clockwise)
+
 Links
-* https://gist.github.com/rxseger/b6ff37961f7fc80f421b5d30eb7147e1
-* http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/
+* [kerry-d-wong](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/)
 
 #### Development of an Arduino-based IR Control Gateway Module
 
