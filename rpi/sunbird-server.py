@@ -52,10 +52,10 @@ def post():
 # -----------------------------------
 
 print('-' * 80)
-print('sunbird-server')
+print('sunbird-server [{serialInterface} @ {baudRate} kb/s]')
 print('-' * 80)
 
-print(f'initializing serial connection on {serialInterface} @ {baudRate} baud rate...')
+print(f'initializing serial connection...')
 ser = serial.Serial(serialInterface, baudRate)
 ser.baudrate = baudRate
 print('initialized.')

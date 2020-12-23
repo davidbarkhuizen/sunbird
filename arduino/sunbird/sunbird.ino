@@ -3,6 +3,8 @@
 int availableBytes;
 char receivedCommand[3];
 
+const int SERIAL_BAUD_RATE = 9600;
+
 // ------------------------------
 
 //comment this out to see the demodulated waveform
@@ -91,35 +93,27 @@ void sendOne()
   #endif
 }
  
+void sendByte(byte B) {
+  byte b;
+  for (int i = 7; i >=0; i--)
+  {
+    b = (B & (1 << i)) >> i;    
+    if (b > 0) sendOne(); else sendZero();
+  }
+}
+
 void sendCommand(int throttle, int leftRight, int forwardBackward)
 {
-  byte b;
- 
   sendHeader();
-   
-  for (int i = 7; i >=0; i--)
-  {
-    b = ((ROTATION_STATIONARY + leftRight) & (1 << i)) >> i;    
-    if (b > 0) sendOne(); else sendZero();
-  }
-   
-  for (int i = 7; i >=0; i--)
-  {
-    b = ((63 + forwardBackward) & (1 << i)) >> i;    
-    if (b > 0) sendOne(); else sendZero();
-  } 
-   
-  for (int i = 7; i >=0; i--)
-  {
-    b = (throttle & (1 << i)) >> i;    
-    if (b > 0) sendOne(); else sendZero();
-  }
-   
-  for (int i = 7; i >=0; i--)
-  {
-    b = (CAL_BYTE & (1 << i)) >> i;    
-    if (b > 0) sendOne(); else sendZero();
-  } 
+  sendByte(ROTATION_STATIONARY + leftRight);
+  sendByte(63 + forwardBackward);
+  sendByte(throttle);
+  sendByte(CAL_BYTE);
+}
+
+void timerISR()
+{
+  sendCommand(Throttle, LeftRight, FwdBack);
 }
  
 void setup()
@@ -140,7 +134,7 @@ void setup()
 
   // ----------------------------
 
-  Serial.begin(9600);
+  Serial.begin(SERIAL_BAUD_RATE);
 }
  
 void loop()
@@ -153,9 +147,4 @@ void loop()
     LeftRight = (int)((short)receivedCommand[1]); // -64 to 63
     FwdBack = (int)((short)receivedCommand[2]); // -128 to 127
   }
-}
- 
-void timerISR()
-{
-  sendCommand(Throttle, LeftRight, FwdBack);
 }
