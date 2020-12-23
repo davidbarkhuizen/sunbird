@@ -5,22 +5,26 @@ import serial
 import time
 import struct
 
+serialInterface = '/dev/ttyUSB0' # '/dev/ttyUSB0' '/dev/ttyACM0' '/dev/ttyUSB1'
+baudRate = 9600
+initializationDelayS = 2
+
 print('initializing serial connection...')
-ser = serial.Serial("/dev/ttyACM0", 9600)  # ls /dev/tty/ACM*
-ser.baudrate=9600
-time.sleep(2)
+ser = serial.Serial(serialInterface, baudRate)
+ser.baudrate=baudRate
+time.sleep(initializationDelayS)
 print('serial connection initialized.')
 
 def command(power, leftRight, fwdRev):
-	# power       [0, 255]
-	# leftRight   [-64, 63]
+    # power       [0, 255]
+    # leftRight   [-64, 63]
     # fwdRev      [-128, 127]
-	
-	p = struct.pack('>B', power)[0]
-	lr = struct.pack('>b', leftRight)[0]
-	fr = struct.pack('>b', fwdRev)[0]
-	
-	return [p, lr, fr]
+
+    p = struct.pack('>B', power)[0]
+    lr = struct.pack('>b', leftRight)[0]
+    fr = struct.pack('>b', fwdRev)[0]
+
+    return [p, lr, fr]
 
 app = Flask(__name__)
 app.config.from_mapping(
