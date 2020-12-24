@@ -1,7 +1,7 @@
 #include <TimerOne.h>
  
 int availableBytes;
-char receivedCommand[3];
+byte receivedCommand[4];
 
 const int SERIAL_BAUD_RATE = 9600;
 
@@ -17,10 +17,8 @@ const int HEADER_DURATION = 2000;
 const int HIGH_DURATION = 380;
 const int ZERO_LOW_DURATION = 220;
 const int ONE_LOW_DURATION = 600;
-const byte ROTATION_STATIONARY = 60;
-const byte CAL_BYTE = 52; 
  
-int Throttle, LeftRight, FwdBack;
+byte Command[4];
 
 void sendHeader()
 {
@@ -102,30 +100,19 @@ void sendByte(byte B) {
   }
 }
 
-void sendBytes(byte B[4]) {
-  byte b;
-  for (int i = 0; i < 4; i++)
-  {
-    sendByte(B[i]);
-  }
-}
-
-void sendCommand(int throttle, int leftRight, int forwardBackward)
+void sendCommand()
 {
   sendHeader();
 
-  byte b[4];
-  b[0] = (byte)(ROTATION_STATIONARY + leftRight);
-  b[1] = (byte)(63 + forwardBackward);
-  b[2] = (byte)throttle;
-  b[4] = CAL_BYTE;
-
-  sendBytes(b);
+  for (int i = 0; i < 4; i++)
+  {
+    sendByte(Command[i]);
+  }
 }
 
 void timerISR()
 {
-  sendCommand(Throttle, LeftRight, FwdBack);
+  sendCommand();
 }
  
 void setup()
@@ -152,21 +139,8 @@ void setup()
 void loop()
 {  
   availableBytes = Serial.available();
-  if (availableBytes >= 3) {
-    Serial.readBytes(receivedCommand, 3);
-
-    Throttle = receivedCommand[0]; // 0 to 255
-    LeftRight = (int)((short)receivedCommand[1]); // -64 to 63
-    FwdBack = (int)((short)receivedCommand[2]); // -128 to 127
-
-    byte lr = (byte)(ROTATION_STATIONARY + LeftRight);
-    byte fb = (byte)(63 + FwdBack);
-    byte t = (byte)Throttle;
-    byte c = CAL_BYTE;
-
-    Serial.write(lr);
-    Serial.write(fb);
-    Serial.write(t);
-    Serial.write(c);
+  if (availableBytes >= 4) {
+    Serial.readBytes(receivedCommand, 4);
+    memcpy(receivedCommand, Command, 4);
   }
 }

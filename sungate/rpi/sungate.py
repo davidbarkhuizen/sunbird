@@ -58,10 +58,16 @@ def post():
     # leftright     [-64, 63]
     # fwdback       [-128, 127]
 
-    cmd = command(throttle=j['throttle'], leftright=j['leftright'], fwdback=j['fwdback'])
-    print(f'transmitting command to ground station over serial interface: {cmd}',)
-    ser.write(cmd)
-    print('sent.')
+    throttle=j['throttle']
+    leftright=j['leftright']
+    fwdback=j['fwdback']
+    calib=j['calib']
+
+    ords = [leftright, fwdback, throttle, calib]
+    packed = [struct.pack('>B', ord)[0] for ord in ords]
+    ba = bytearray(packed)
+    ser.write(ba)
+    print('sent:', ba)
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
