@@ -31,17 +31,6 @@ print('initialized.')
 
 # ------------------------------------------
 
-def command(throttle, leftright, fwdback):
-    # throttle      [0, 255]
-    # leftright     [-64, 63]
-    # fwdback       [-128, 127]
-
-    t = struct.pack('>B', throttle)[0]
-    lr = struct.pack('>b', leftright)[0]
-    fb = struct.pack('>b', fwdback)[0]
-
-    return [t, lr, fb]
-
 app = Flask(__name__)
 
 @app.route('/', methods = ['GET'])
@@ -53,10 +42,6 @@ def post():
 
     j = request.json
     print(f'command received via HTTP POST: {j}')
-
-    # throttle      [0, 255]
-    # leftright     [-64, 63]
-    # fwdback       [-128, 127]
 
     throttle=j['throttle']
     leftright=j['leftright']
