@@ -7,6 +7,8 @@ import serial
 import time
 import struct
 
+import socket
+
 parser = argparse.ArgumentParser(description='sunbird control gateway server')
 parser.add_argument('--host', help='host to server as, e.g. 0.0.0.0 or 127.0.0.1')
 parser.add_argument('--port', help='TCIP/IP port to listen on')
@@ -56,8 +58,10 @@ def post():
 
 # -----------------------------------
 
+localIP = socket.gethostbyname(socket.gethostname())
+
 print('-' * 80)
-print('sunbird-server [{serialInterface} @ {baudRate} kb/s]')
+print('sunbird-server http://${localIP}:{port} -> {serialInterface} @ {baudRate} kb/s')
 print('-' * 80)
 
 print(f'initializing serial connection...')
