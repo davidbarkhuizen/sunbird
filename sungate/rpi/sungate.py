@@ -78,14 +78,13 @@ p = multiprocessing.Process(target=startServer)
 p.start()
 
 try:
-
-    buffer = bytearray()
-
     while True:
         time.sleep(0.1)
 
-        cmd = ser.readline()        
-        print(cmd)
+        charCount = ser.inWaiting()
+        if charCount >= 4:
+            cmd = ser.read(4)        
+            print(cmd)
 
 finally:
     ser.close()

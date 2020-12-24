@@ -164,11 +164,9 @@ void loop()
     byte t = (byte)Throttle;
     byte c = CAL_BYTE;
 
-    Serial.print(lr);
-    Serial.print(fb);
-    Serial.print(t);
-    Serial.print(c);
-
-    Serial.print('\n');
+    Serial.write(lr);
+    Serial.write(fb);
+    Serial.write(t);
+    Serial.write(c);
   }
 }
