@@ -83,8 +83,9 @@ try:
 
     while True:
         for c in ser.read():
+            print(bytearray(c).hex())
             if c == '\n':
-                print(buffer.hex())
+                print()
                 buffer.clear()
             else:
                 buffer.append(c)
