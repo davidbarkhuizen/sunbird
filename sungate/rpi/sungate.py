@@ -64,7 +64,7 @@ def post():
     calib=j['calib']
 
     ords = [leftright, fwdback, throttle, calib]
-    packed = [struct.pack('>B', ord)[0] for ord in ords]
+    packed = [struct.pack('>B', o)[0] for o in ords]
     ba = bytearray(packed)
     ser.write(ba)
     print('sent:', ba)
