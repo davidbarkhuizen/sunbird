@@ -84,7 +84,8 @@ try:
         charCount = ser.inWaiting()
         if charCount >= 4:
             cmd = ser.read(4)        
-            print(cmd)
+           
+            print([ord(x) for x in cmd])
 
 finally:
     ser.close()
