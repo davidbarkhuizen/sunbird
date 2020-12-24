@@ -7,7 +7,7 @@ import serial
 import time
 import struct
 
-import socket
+import multiprocessing
 
 parser = argparse.ArgumentParser(description='sunbird control gateway server')
 parser.add_argument('--host', help='host to server as, e.g. 0.0.0.0 or 127.0.0.1')
@@ -19,8 +19,17 @@ args = parser.parse_args()
 host = args.host 
 port = args.port
 
+# ------------------------------------------
+
 serialInterface = args.serial
 baudRate = args.baud 
+
+print(f'initializing serial connection...')
+ser = serial.Serial(serialInterface, baudRate)
+ser.baudrate = baudRate
+print('initialized.')
+
+# ------------------------------------------
 
 def command(throttle, leftright, fwdback):
     # throttle      [0, 255]
@@ -58,17 +67,28 @@ def post():
 
 # -----------------------------------
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.connect(("8.8.8.8", 80))
-localIP = s.getsockname()[0]
-
 print('-' * 80)
-print(f'sunbird-server http://{localIP}:{port} -> {serialInterface} ({baudRate} kb/s)')
+print(f'sunbird-server :{port} -> {serialInterface} ({baudRate} kb/s)')
 print('-' * 80)
 
-print(f'initializing serial connection...')
-ser = serial.Serial(serialInterface, baudRate)
-ser.baudrate = baudRate
-print('initialized.')
+def startServer():
+    app.run(host, port)
 
-app.run(host, port)
+p = multiprocessing.Process(target=startServer)
+p.start()
+
+try:
+
+    buffer = []
+
+    while True:
+        for c in ser.read():
+            buffer.append(c)
+            if c == '\n':
+                print(''.join(buffer))
+                buffer.clear()
+            else:
+                buffer.append(c)
+
+finally:
+    ser.close()
