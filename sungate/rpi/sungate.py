@@ -79,9 +79,16 @@ p.start()
 
 try:
 
+    buffer = bytearray()
+
     while True:
-        l = ser.readline()
-        print(l)
+        time.sleep(0.1)
+
+        toReadCount = ser.inWaiting()  # Or: while ser.inWaiting():
+        
+        if (toReadCount > 0):
+            read = ser.read(toReadCount)
+            print(read)
 
 finally:
     ser.close()
