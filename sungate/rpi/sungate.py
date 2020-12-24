@@ -79,11 +79,9 @@ p.start()
 
 try:
 
-    buffer = bytearray()
-
     while True:
-        for c in ser.read():
-            print(bytearray(c).hex() + '.')
+        l = ser.readline()
+        print(l)
 
 finally:
     ser.close()

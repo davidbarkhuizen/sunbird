@@ -149,8 +149,6 @@ void setup()
   Serial.begin(SERIAL_BAUD_RATE);
 }
 
-byte writeToSerial[4];
-
 void loop()
 {  
   availableBytes = Serial.available();
@@ -161,10 +159,14 @@ void loop()
     LeftRight = (int)((short)receivedCommand[1]); // -64 to 63
     FwdBack = (int)((short)receivedCommand[2]); // -128 to 127
 
-    writeToSerial[0] = (byte)(ROTATION_STATIONARY + LeftRight);
-    writeToSerial[1] = (byte)(63 + FwdBack);
-    writeToSerial[2] = (byte)Throttle;
-    writeToSerial[4] = CAL_BYTE;
-    Serial.write(writeToSerial, 4);
+    byte lr = (byte)(ROTATION_STATIONARY + LeftRight);
+    byte fb = (byte)(63 + FwdBack);
+    byte t = (byte)Throttle;
+    byte c = CAL_BYTE;
+
+    Serial.print(lr);
+    Serial.print(fb);
+    Serial.print(t);
+    Serial.print(c);
   }
 }
