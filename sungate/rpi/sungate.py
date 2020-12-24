@@ -79,13 +79,12 @@ p.start()
 
 try:
 
-    buffer = []
+    buffer = bytearray()
 
     while True:
         for c in ser.read():
-            buffer.append(c)
             if c == '\n':
-                print(''.join(buffer))
+                print(buffer.hex())
                 buffer.clear()
             else:
                 buffer.append(c)

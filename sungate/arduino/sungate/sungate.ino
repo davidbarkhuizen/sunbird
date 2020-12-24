@@ -102,13 +102,25 @@ void sendByte(byte B) {
   }
 }
 
+void sendBytes(byte B[4]) {
+  byte b;
+  for (int i = 0; i < 4; i++)
+  {
+    sendByte(B[i]);
+  }
+}
+
 void sendCommand(int throttle, int leftRight, int forwardBackward)
 {
   sendHeader();
-  sendByte(ROTATION_STATIONARY + leftRight);
-  sendByte(63 + forwardBackward);
-  sendByte(throttle);
-  sendByte(CAL_BYTE);
+
+  byte b[4];
+  b[0] = (byte)(ROTATION_STATIONARY + leftRight);
+  b[1] = (byte)(63 + forwardBackward)
+  b[2] = (byte)throttle;
+  b[4] = CAL_BYTE;
+
+  sendBytes(b);
 }
 
 void timerISR()
@@ -136,7 +148,9 @@ void setup()
 
   Serial.begin(SERIAL_BAUD_RATE);
 }
- 
+
+byte writeToSerial[4];
+
 void loop()
 {  
   availableBytes = Serial.available();
@@ -146,5 +160,12 @@ void loop()
     Throttle = receivedCommand[0]; // 0 to 255
     LeftRight = (int)((short)receivedCommand[1]); // -64 to 63
     FwdBack = (int)((short)receivedCommand[2]); // -128 to 127
+
+    writeToSerial[0] = (byte)(ROTATION_STATIONARY + LeftRight);
+    writeToSerial[1] = (byte)(63 + FwdBack)
+    writeToSerial[2] = (byte)Throttle;
+    writeToSerial[4] = CAL_BYTE;
+    Serial.write(writeToSerial, 4);
+    Serial.print('');
   }
 }
