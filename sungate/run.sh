@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [[ $# -eq 0 ]] ; then
     echo 'usage: ./run.sh <serial device> e.g. run.sh /dev/ttyACM0'
     exit 0
