@@ -67,7 +67,7 @@ def post():
     packed = [struct.pack('>B', o)[0] for o in ords]
     ba = bytearray(packed)
     ser.write(ba)
-    print('sent:', ba)
+    print('sent:', [ord(b) for b in ba]
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
