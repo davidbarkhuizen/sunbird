@@ -168,5 +168,7 @@ void loop()
     Serial.print(fb);
     Serial.print(t);
     Serial.print(c);
+
+    Serial.print('\n');
   }
 }
