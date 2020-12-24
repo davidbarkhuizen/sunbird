@@ -85,7 +85,7 @@ try:
         if charCount >= 4:
             cmd = ser.read(4)        
            
-            print([ord(x) for x in cmd])
+            print([str(x) for x in cmd])
 
 finally:
     ser.close()
