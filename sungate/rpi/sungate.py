@@ -58,10 +58,10 @@ def post():
 
 # -----------------------------------
 
-localIP = socket.gethostbyname(socket.gethostname())
+localIP = socket.gethostbyname_ex(socket.gethostname())[-1]
 
 print('-' * 80)
-print(f'sunbird-server http://${localIP}:{port} -> {serialInterface} @ {baudRate} kb/s')
+print(f'sunbird-server http://{localIP}:{port} -> {serialInterface} @ {baudRate} kb/s')
 print('-' * 80)
 
 print(f'initializing serial connection...')
