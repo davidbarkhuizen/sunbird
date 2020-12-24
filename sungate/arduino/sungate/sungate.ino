@@ -142,6 +142,10 @@ void loop()
   if (availableBytes >= 4) {
     Serial.readBytes(receivedCommand, 4);
     memcpy(receivedCommand, Command, 4);
-    Serial.write(Command, 4);
+
+    Serial.write(Command[0]);
+    Serial.write(Command[1]);
+    Serial.write(Command[2]);
+    Serial.write(Command[3]);
   }
 }
