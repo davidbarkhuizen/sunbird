@@ -83,12 +83,7 @@ try:
 
     while True:
         for c in ser.read():
-            print(bytearray(c).hex())
-            if c == '\n':
-                print()
-                buffer.clear()
-            else:
-                buffer.append(c)
+            print(bytearray(c).hex() + '.')
 
 finally:
     ser.close()

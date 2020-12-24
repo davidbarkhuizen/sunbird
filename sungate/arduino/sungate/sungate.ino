@@ -166,6 +166,5 @@ void loop()
     writeToSerial[2] = (byte)Throttle;
     writeToSerial[4] = CAL_BYTE;
     Serial.write(writeToSerial, 4);
-    Serial.print("");
   }
 }
