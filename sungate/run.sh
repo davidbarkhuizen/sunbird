@@ -3,4 +3,6 @@ if [[ $# -eq 0 ]] ; then
     exit 0
 fi
 
+set -x # echo on
+
 python3 rpi/sungate.py --host 0.0.0.0 --port 8888 --baud 9600 --serial "$1"

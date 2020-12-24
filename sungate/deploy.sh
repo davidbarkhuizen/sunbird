@@ -3,4 +3,6 @@ if [[ $# -eq 0 ]] ; then
     exit 0
 fi
 
+set -x # echo on
+
 arduino --upload arduino/sungate/sungate.ino --port "$1"

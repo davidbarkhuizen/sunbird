@@ -3,5 +3,7 @@ if [[ $# -eq 0 ]] ; then
     exit 0
 fi
 
+set -x # echo on
+
 ./deploy.sh "%1"
 ./run.sh "%1"
