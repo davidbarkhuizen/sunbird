@@ -18,8 +18,6 @@ const int HIGH_DURATION = 380;
 const int ZERO_LOW_DURATION = 220;
 const int ONE_LOW_DURATION = 600;
  
-byte Command[4];
-
 void sendHeader()
 {
   #ifndef MODULATED
@@ -100,19 +98,14 @@ void sendByte(byte B) {
   }
 }
 
-void sendCommand()
+void timerISR()
 {
   sendHeader();
 
   for (int i = 0; i < 4; i++)
   {
-    sendByte(Command[i]);
+    sendByte(receivedCommand[i]);
   }
-}
-
-void timerISR()
-{
-  sendCommand();
 }
  
 void setup()
@@ -141,11 +134,6 @@ void loop()
   availableBytes = Serial.available();
   if (availableBytes >= 4) {
     Serial.readBytes(receivedCommand, 4);
-    memcpy(receivedCommand, Command, 4);
-
-    Serial.write(Command[0]);
-    Serial.write(Command[1]);
-    Serial.write(Command[2]);
-    Serial.write(Command[3]);
+    Serial.write(receivedCommand, 4);
   }
 }
