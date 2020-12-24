@@ -7,5 +7,5 @@ fi
 
 set -x # echo on
 
-./deploy.sh %1
-./run.sh %1
+bash deploy.sh "$1"
+bash run.sh "$1"
