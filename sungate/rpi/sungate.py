@@ -85,7 +85,7 @@ try:
         time.sleep(0.1)
 
         cmd = ser.readline()        
-        print(read)
+        print(cmd)
 
 finally:
     ser.close()
