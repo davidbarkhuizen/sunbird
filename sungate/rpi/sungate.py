@@ -20,16 +20,16 @@ port = args.port
 serialInterface = args.serial
 baudRate = args.baud 
 
-def command(power, leftRight, fwdRev):
-    # power       [0, 255]
-    # leftRight   [-64, 63]
-    # fwdRev      [-128, 127]
+def command(throttle, leftright, fwdback):
+    # throttle      [0, 255]
+    # leftright     [-64, 63]
+    # fwdback       [-128, 127]
 
-    p = struct.pack('>B', power)[0]
-    lr = struct.pack('>b', leftRight)[0]
-    fr = struct.pack('>b', fwdRev)[0]
+    t = struct.pack('>B', throttle)[0]
+    lr = struct.pack('>b', leftright)[0]
+    fb = struct.pack('>b', fwdback)[0]
 
-    return [p, lr, fr]
+    return [t, lr, fb]
 
 app = Flask(__name__)
 
@@ -40,9 +40,14 @@ def get():
 @app.route('/', methods = ['POST'])
 def post():
 
-    content = request.json
-    print(f'command received via HTTP POST: {content}')
-    cmd = command(content['hover'], content['rotate'], content['thrust'])
+    j = request.json
+    print(f'command received via HTTP POST: {j}')
+
+    # throttle      [0, 255]
+    # leftright     [-64, 63]
+    # fwdback       [-128, 127]
+
+    cmd = command(throttle=j['throttle'], leftright=j['leftright'], fwdback=j['fwdback'])
     print(f'transmitting command to ground station over serial interface: {cmd}',)
     ser.write(cmd)
     print('sent.')
