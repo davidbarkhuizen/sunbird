@@ -116,7 +116,7 @@ void sendCommand(int throttle, int leftRight, int forwardBackward)
 
   byte b[4];
   b[0] = (byte)(ROTATION_STATIONARY + leftRight);
-  b[1] = (byte)(63 + forwardBackward)
+  b[1] = (byte)(63 + forwardBackward);
   b[2] = (byte)throttle;
   b[4] = CAL_BYTE;
 
@@ -162,10 +162,10 @@ void loop()
     FwdBack = (int)((short)receivedCommand[2]); // -128 to 127
 
     writeToSerial[0] = (byte)(ROTATION_STATIONARY + LeftRight);
-    writeToSerial[1] = (byte)(63 + FwdBack)
+    writeToSerial[1] = (byte)(63 + FwdBack);
     writeToSerial[2] = (byte)Throttle;
     writeToSerial[4] = CAL_BYTE;
     Serial.write(writeToSerial, 4);
-    Serial.print('');
+    Serial.print("");
   }
 }
