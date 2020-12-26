@@ -47,7 +47,7 @@ def renderCommandByteArray(leftright, fwdback, throttle, calib):
     '''
     ords = [leftright, fwdback, throttle, calib]
     packed = [struct.pack('>B', o)[0] for o in ords]
-    return bytearray(packed)
+    return packed
 
 # ------------------------------------------
 
