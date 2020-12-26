@@ -96,6 +96,7 @@ try:
         if charCount > 0:
             log = ser.read(charCount)        
             print(f'ARDUINO DEBUG: ', log.decode('ascii'))
+            print("".join(map(chr, log)))
 
 finally:
     ser.close()
