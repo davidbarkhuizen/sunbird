@@ -207,6 +207,11 @@ void loop()
       command[2] = d3;
       command[3] = d4;
 
+      // echo packet back so that sender can confirm receipt
+      //
+      byte packet[packetLength] = { H1, H2, dataLength, d1, d2, d3, d4, T };
+      Serial.write(packet, packetLength);
+      
       // shift contents right of command left, dropping command and preceding bytes
       //
       byte remainderCount = commandBufferEndIndex - (i + packetLength);
@@ -214,10 +219,6 @@ void loop()
         commandBuffer[j] = commandBuffer[i + packetLength + j];
       }
       commandBufferEndIndex = remainderCount;
-
-      // echo back so that sender can confirm receipt
-      //
-      Serial.write(H1, H2, dataLength, d1, d2, d3, d4, T);
 
       break;
     }    
