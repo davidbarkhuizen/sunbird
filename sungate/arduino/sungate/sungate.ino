@@ -150,14 +150,13 @@ void loop()
 
     // read as much as we can fit
     
-    byte countToRead = availableBytes;
+    int countToRead = availableBytes;
     int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
     if (countToRead > maxAllowedToRead) {
       countToRead = maxAllowedToRead;
     }
     
     Serial.readBytes(serialInBuffer, countToRead);
-
     for (int i = 0; i < countToRead; i++)
     {
       commandBuffer[commandBufferEndIndex + i] = serialInBuffer[i];
@@ -180,6 +179,7 @@ void loop()
         Serial.print(" ");
         Serial.print(commandBuffer[1 + i]);
         Serial.print('\n');
+        Serial.write(commandBuffer);
         continue;
       }
 
