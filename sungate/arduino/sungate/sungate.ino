@@ -226,6 +226,8 @@ void loop()
       command[3] = d4;
 
       Serial.print("GOOD!");
+      Serial.write(command, 4);
+      Serial.print("done.");
 
       break;
     }    
