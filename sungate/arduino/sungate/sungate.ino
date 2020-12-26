@@ -139,7 +139,7 @@ void loop()
   // if there is at least a byte to read
   //
   availableBytes = Serial.available();
-  if (availableBytes >= 0) {
+  if (availableBytes > 0) {
 
     // read as much as we can fit
     
