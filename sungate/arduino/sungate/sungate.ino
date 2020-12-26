@@ -168,7 +168,9 @@ void loop()
       if (!headerOK) {
         Serial.print("bad header: ");
         Serial.print(commandBuffer[0 + i]);
+        Serial.print(" ");
         Serial.print(commandBuffer[1 + i]);
+        Serial.print("\n");
         continue;
       }
 
