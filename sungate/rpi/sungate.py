@@ -81,7 +81,7 @@ def post():
 # -----------------------------------
 
 print('-' * 80)
-print(f'sungate relay station http://sungate:{port} -> {serialInterface} @ {baudRate} kb/s)')
+print(f'sungate relay station sungate:{port} -> {serialInterface} @ {baudRate} kb/s)')
 print('-' * 80)
 
 def startServer():

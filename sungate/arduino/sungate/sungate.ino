@@ -1,7 +1,11 @@
 #include <TimerOne.h>
  
 int availableBytes;
-byte receivedCommand[4];
+byte serialInBuffer[512];
+
+byte commandBuffer[512];
+int commandBufferEndIndex = 0;
+byte command[4];
 
 const int SERIAL_BAUD_RATE = 9600;
 
@@ -104,7 +108,7 @@ void timerISR()
 
   for (int i = 0; i < 4; i++)
   {
-    sendByte(receivedCommand[i]);
+    sendByte(command[i]);
   }
 }
  
@@ -131,9 +135,70 @@ void setup()
 
 void loop()
 {  
+
+  // if there is at least a byte to read
+  //
   availableBytes = Serial.available();
-  if (availableBytes >= 4) {
-    Serial.readBytes(receivedCommand, 4);
-    Serial.write(receivedCommand, 4);
+  if (availableBytes >= 0) {
+
+    // read as much as we can fit
+    
+    byte countToRead = availableBytes;
+    int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
+    if (countToRead > maxAllowedToRead) {
+      countToRead = maxAllowedToRead;
+    }
+    
+    Serial.readBytes(serialInBuffer, countToRead);
+
+    for (int i = 0; i < countToRead; i++)
+    {
+      commandBuffer[commandBufferEndIndex + i] = serialInBuffer[i];
+    }
+
+    commandBufferEndIndex = commandBufferEndIndex + countToRead;
+    
+    byte L = 4;
+    byte H1 = 17;
+    byte H2 = 171;
+
+    for (size_t i = 0; i <= commandBufferEndIndex - (L + 4); i++)
+    {
+      bool headerOK = (commandBuffer[0 + i] == H1) && (commandBuffer[1 + i] == H2);
+      if (!headerOK) {
+        return;
+      }
+
+      bool expectedLength = (commandBuffer[2 + i] == L);
+      if (!expectedLength) {
+        return;
+      }
+
+      int d1 = commandBuffer[3 + i];
+      int d2 = commandBuffer[4 + i];
+      int d3 = commandBuffer[5 + i];
+      int d4 = commandBuffer[6 + i];
+
+      int T = commandBuffer[7 + i];
+
+      bool checksumOK = (d1 + d2 + d3 + d4) % 256 == T;
+      if (!checksumOK) {
+        return;
+      }      
+
+      for (i = 0; i < min(commandBufferEndIndex + 8, sizeof(commandBuffer)); i++)
+      {
+        commandBuffer[i] = commandBuffer[i + 8];
+      }
+
+      commandBufferEndIndex = commandBufferEndIndex - 8;
+
+      command[0] = d1;
+      command[1] = d2;
+      command[2] = d3;
+      command[3] = d4;
+    }    
+    
+    Serial.write(command, 4);
   }
 }
