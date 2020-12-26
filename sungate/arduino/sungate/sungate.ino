@@ -179,7 +179,9 @@ void loop()
         Serial.print(" ");
         Serial.print(commandBuffer[1 + i]);
         Serial.print('\n');
-        Serial.print(commandBuffer
+        Serial.print(commandBuffer[2 + i]);
+        Serial.print(" ");
+        Serial.print(commandBuffer[3 + i]);
         continue;
       }
 
