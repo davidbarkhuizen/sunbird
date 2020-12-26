@@ -69,12 +69,9 @@ def post():
     calib=j['calib']
 
     cmd = renderCommandByteArray(leftright, fwdback, throttle, calib)
-    print('raw command:', [b for b in cmd])
     encoded = encode(cmd)
-    print('encoded', [b for b in encoded])
-    ser.write(bytearray([9,8,7,6]))
+    print('raw command:', [b for b in cmd], ', encoded: ', encoded)
     ser.write(encoded)
-    ser.write(bytearray([9,8,7,6]))
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
@@ -98,7 +95,7 @@ try:
         charCount = ser.inWaiting()
         if charCount > 0:
             log = ser.read(charCount)        
-            print(f'ARDUINO DEBUG: {log}')
+            print(f'ARDUINO DEBUG: ', log.decode('ascii'))
 
 finally:
     ser.close()
