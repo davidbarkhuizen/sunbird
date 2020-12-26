@@ -133,8 +133,15 @@ void setup()
   Serial.begin(SERIAL_BAUD_RATE);
 }
 
+bool busy = false;
+
 void loop()
 {  
+  if (busy) {
+    return;
+  } else {
+    busy = true;
+  }
 
   // if there is at least a byte to read
   //
@@ -208,4 +215,6 @@ void loop()
     
     Serial.write(command, 4);
   }
+
+  busy = false;
 }
