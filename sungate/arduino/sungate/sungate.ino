@@ -212,8 +212,6 @@ void loop()
       command[2] = d3;
       command[3] = d4;
     }    
-    
-    Serial.write(command, 4);
   }
 
   busy = false;
