@@ -168,6 +168,10 @@ void loop()
 
     commandBufferEndIndex = commandBufferEndIndex + countToRead;
     
+    if (commandBufferEndIndex < 8) {
+      return;
+    }
+
     byte L = 4;
     byte H1 = 17;
     byte H2 = 171;
