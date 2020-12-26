@@ -95,7 +95,7 @@ try:
         charCount = ser.inWaiting()
         if charCount > 0:
             log = ser.read(charCount)        
-            print(f'echo receipt: ', '.'.join(map(chr, log)))
+            print(f'echo receipt: ', '.'.join(map(str, log)))
 
 finally:
     ser.close()
