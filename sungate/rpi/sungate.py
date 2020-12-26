@@ -29,6 +29,15 @@ ser = serial.Serial(serialInterface, baudRate)
 ser.baudrate = baudRate
 print('initialized.')
 
+def encode(data):
+
+    header = [17, 171]
+    length = 4
+
+    trailer = sum(data) % 256
+
+    return [struct.pack('>B', x)[0] for x in [header[0], header[1], length, *data, trailer]]
+
 # ------------------------------------------
 
 def renderCommandByteArray(leftright, fwdback, throttle, calib):
@@ -62,8 +71,10 @@ def post():
     calib=j['calib']
 
     cmd = renderCommandByteArray(leftright, fwdback, throttle, calib)
-    ser.write(cmd)
     print('raw command:', [b for b in cmd])
+    encoded = encode(cmd)
+    print('encoded', [b for b in encoded])
+    ser.write(encoded)
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
