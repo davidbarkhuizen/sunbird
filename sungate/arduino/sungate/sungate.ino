@@ -181,22 +181,11 @@ void loop()
     {
       bool headerOK = (commandBuffer[0 + i] == H1) && (commandBuffer[1 + i] == H2);
       if (!headerOK) {
-        Serial.print("bad header for i = ");
-        Serial.print(i);
-        Serial.print(" : ");
-        Serial.print(commandBuffer[0 + i]);
-        Serial.print(" ");
-        Serial.print(commandBuffer[1 + i]);
-        Serial.print('\n');
-        Serial.print(commandBuffer[2 + i]);
-        Serial.print(" ");
-        Serial.print(commandBuffer[3 + i]);
         continue;
       }
 
       bool expectedLength = (commandBuffer[2 + i] == L);
       if (!expectedLength) {
-        Serial.print("bad L");
         continue;
       }
 
@@ -209,16 +198,10 @@ void loop()
 
       bool checksumOK = (d1 + d2 + d3 + d4) % 256 == T;
       if (!checksumOK) {
-        Serial.print("bad checksum");
         continue;
-      }      
-
-      for (i = 0; i < min(commandBufferEndIndex + 8, sizeof(commandBuffer)); i++)
-      {
-        commandBuffer[i] = commandBuffer[i + 8];
       }
 
-      commandBufferEndIndex = commandBufferEndIndex - 8;
+      // extract command
 
       command[0] = d1;
       command[1] = d2;
@@ -228,6 +211,16 @@ void loop()
       Serial.print("GOOD!");
       Serial.write(command, 4);
       Serial.print("done.");
+
+      // move contents left, dropping bytes preceding command
+
+      byte remainderCount = commandBufferEndIndex - (i + 8);
+      for (size_t j = i + 8; j < commandBufferEndIndex; j++);
+      {
+        commandBuffer[j - (i + 8)] = commandBuffer[j];
+      }
+
+      commandBufferEndIndex = remainderCount;
 
       break;
     }    
