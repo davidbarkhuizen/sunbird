@@ -48,29 +48,20 @@ def fwd(url):
 
 thover = 100 # full battery
 thover = 80 # empty battery
+thover = 90 # med battery
+
 tdescend = 50
 
-def leftright(url):
-    sendCommand(url, { 'throttle': 0, 'fwdback': 0, 'leftright': 0 })
+zeroLR = 30
+zeroLR = 60
+
+def hover(url):
+    sendCommand(url, { 'throttle': 0, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
     time.sleep(2)
-    sendCommand(url, { 'throttle': 20, 'fwdback': 0, 'leftright': 0 })
+    sendCommand(url, { 'throttle': 20, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
+    time.sleep(2)
+    sendCommand(url, { 'throttle': thover, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
     time.sleep(4)
-    sendCommand(url, { 'throttle': thover, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(3)
-    sendCommand(url, { 'throttle': thover, 'fwdback': 0, 'leftright': 20 })
-    time.sleep(2)
-    sendCommand(url, { 'throttle': thover, 'fwdback': 0, 'leftright': -20 })
-    time.sleep(2)
-    sendCommand(url, { 'throttle': tdescend, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(2)
-    sendCommand(url, { 'throttle': 0, 'fwdback': 0, 'leftright': 0 })
+    sendCommand(url, { 'throttle': 0, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
 
-def test(url):
-
-    for i in 
-
-    sendCommand(url, { 'throttle': 0, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(2)
-
-
-test(f'http://{host}:{port}')
+hover(f'http://{host}:{port}')
