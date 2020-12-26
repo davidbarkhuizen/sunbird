@@ -212,11 +212,11 @@ void loop()
       Serial.write(command, 4);
       Serial.print("done.");
 
-      // move contents left, dropping bytes preceding command
+      // shift contents right of command left, dropping command and preceding bytes
 
       byte remainderCount = commandBufferEndIndex - (i + 8);
-      for (size_t j = i + 8; j < commandBufferEndIndex; j++) {
-        commandBuffer[j - (i + 8)] = commandBuffer[j];
+      for (size_t j = 0; j < remainderCount; j++) {
+        commandBuffer[j] = commandBuffer[i + 8 + j];
       }
 
       commandBufferEndIndex = remainderCount;
