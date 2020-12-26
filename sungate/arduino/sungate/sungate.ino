@@ -174,12 +174,12 @@ void loop()
         return;
       }
 
-      int d1 = commandBuffer[3 + i];
-      int d2 = commandBuffer[4 + i];
-      int d3 = commandBuffer[5 + i];
-      int d4 = commandBuffer[6 + i];
+      byte d1 = commandBuffer[3 + i];
+      byte d2 = commandBuffer[4 + i];
+      byte d3 = commandBuffer[5 + i];
+      byte d4 = commandBuffer[6 + i];
 
-      int T = commandBuffer[7 + i];
+      byte T = commandBuffer[7 + i];
 
       bool checksumOK = (d1 + d2 + d3 + d4) % 256 == T;
       if (!checksumOK) {
