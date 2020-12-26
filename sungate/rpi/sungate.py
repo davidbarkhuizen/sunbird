@@ -31,6 +31,19 @@ print('initialized.')
 
 # ------------------------------------------
 
+def renderCommandByteArray(leftright, fwdback, throttle, calib):
+    '''
+    leftright       byte    0..255
+    fwdback         byte    0..255
+    throttle        byte    0..255
+    calib           byte    0..255
+    '''
+    ords = [leftright, fwdback, throttle, calib]
+    packed = [struct.pack('>B', o)[0] for o in ords]
+    return bytearray(packed)
+
+# ------------------------------------------
+
 app = Flask(__name__)
 
 @app.route('/', methods = ['GET'])
@@ -41,25 +54,23 @@ def get():
 def post():
 
     j = request.json
-    print(f'command received via HTTP POST: {j}')
+    print(f'HTTP-POST from {request.remote_addr}: {j}')
 
     throttle=j['throttle']
     leftright=j['leftright']
     fwdback=j['fwdback']
     calib=j['calib']
 
-    ords = [leftright, fwdback, throttle, calib]
-    packed = [struct.pack('>B', o)[0] for o in ords]
-    ba = bytearray(packed)
-    ser.write(ba)
-    print('sent:', [b for b in ba])
+    cmd = renderCommandByteArray(leftright, fwdback, throttle, calib)
+    ser.write(cmd)
+    print('raw command:', [b for b in cmd])
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
 # -----------------------------------
 
 print('-' * 80)
-print(f'sunbird-server :{port} -> {serialInterface} ({baudRate} kb/s)')
+print(f'sungate relay station http://sungate:{port} -> {serialInterface} @ {baudRate} kb/s)')
 print('-' * 80)
 
 def startServer():
