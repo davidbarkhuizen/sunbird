@@ -215,8 +215,7 @@ void loop()
       // move contents left, dropping bytes preceding command
 
       byte remainderCount = commandBufferEndIndex - (i + 8);
-      for (size_t j = i + 8; j < commandBufferEndIndex; j++);
-      {
+      for (size_t j = i + 8; j < commandBufferEndIndex; j++) {
         commandBuffer[j - (i + 8)] = commandBuffer[j];
       }
 
