@@ -101,9 +101,9 @@ void sendByte(byte B) {
     if (b > 0) sendOne(); else sendZero();
   }
 }
-
-void timerISR()
-{
+  
+void sendCommand() {
+  
   sendHeader();
 
   for (int i = 0; i < 4; i++)
@@ -111,81 +111,79 @@ void timerISR()
     sendByte(command[i]);
   }
 }
+
+void timerISR()
+{
+  sendCommand();
+}
  
 void setup()
 {
+  // configure the IR pin for output
+  //
   pinMode(IR_PIN, OUTPUT);
   digitalWrite(IR_PIN, LOW);
  
-  //setup interrupt interval: 180ms  
+  // configure ISR that will drive the PWM
+  //
   Timer1.initialize(DURATION);
   Timer1.attachInterrupt(timerISR);
    
-  //setup PWM: f=38 || 57 Khz PWM=0.5  
-  byte v = 8000 / 38;
+  // configure PWM
+  // 
+  // PWM = 0.5
+  // f = 38 Khz or || 57 Khz
+  //
+  byte v = 8000 / 38; 
   TCCR2A = _BV(WGM20);
   TCCR2B = _BV(WGM22) | _BV(CS20); 
   OCR2A = v;
-  OCR2B = v / 2;
+  OCR2B = v / 2; 
 
-  // ----------------------------
-
+  // configure serial port
+  //
   Serial.begin(SERIAL_BAUD_RATE);
 }
 
-bool busy = false;
-
 void loop()
 {  
-  if (busy) {
-    return;
-  } else {
-    busy = true;
-  }
-
   // if there is at least a byte to read
   //
   availableBytes = Serial.available();
   if (availableBytes > 0) {
 
-    // read as much as we can fit
-    
+    // read as much as we can without overflow
+    //
     int countToRead = availableBytes;
-    // int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
-    // if (countToRead > maxAllowedToRead) {
-    //   countToRead = maxAllowedToRead;
-    // }
+    int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
+    if (countToRead > maxAllowedToRead) {
+      countToRead = maxAllowedToRead;
+    }
     
     byte countRead = Serial.readBytes(serialInBuffer, countToRead);
-
-    Serial.print("read ");
-    Serial.print(countRead);
-    Serial.print(" bytes. ");
-
     for (int i = 0; i < countRead; i++)
     {
       commandBuffer[commandBufferEndIndex + i] = serialInBuffer[i];
     }
-
     commandBufferEndIndex = commandBufferEndIndex + countRead;
-    
+
+    byte H1 = 17;
+    byte H2 = 171;
+    byte dataLength = 4;
+    byte packetLength = 2 + 1 + dataLength + 1;
+
     if (commandBufferEndIndex < 8) {
-      busy = false;
       return;
     }
 
-    byte L = 4;
-    byte H1 = 17;
-    byte H2 = 171;
-
-    for (size_t i = 0; i <= commandBufferEndIndex - (L + 4); i++)
+    for (size_t i = 0; i <= commandBufferEndIndex - (dataLength + 4); i++)
     {
       bool headerOK = (commandBuffer[0 + i] == H1) && (commandBuffer[1 + i] == H2);
       if (!headerOK) {
         continue;
       }
 
-      bool expectedLength = (commandBuffer[2 + i] == L);
+      bool expectedLength = (commandBuffer[2 + i] == dataLength);
       if (!expectedLength) {
         continue;
       }
@@ -195,7 +193,7 @@ void loop()
       byte d3 = commandBuffer[5 + i];
       byte d4 = commandBuffer[6 + i];
 
-      byte T = commandBuffer[7 + i];
+      byte T = commandBuffer[3 + dataLength + i];
 
       bool checksumOK = (d1 + d2 + d3 + d4) % 256 == T;
       if (!checksumOK) {
@@ -203,28 +201,23 @@ void loop()
       }
 
       // extract command
-
+      //
       command[0] = d1;
       command[1] = d2;
       command[2] = d3;
       command[3] = d4;
 
-      Serial.print("GOOD!");
-      Serial.write(command, 4);
-      Serial.print("done.");
-
       // shift contents right of command left, dropping command and preceding bytes
-
-      byte remainderCount = commandBufferEndIndex - (i + 8);
-      for (size_t j = 0; j < remainderCount; j++) {
-        commandBuffer[j] = commandBuffer[i + 8 + j];
+      //
+      byte remainderCount = commandBufferEndIndex - (i + packetLength);
+      for (byte j = 0; j < remainderCount; j++) {
+        commandBuffer[j] = commandBuffer[i + packetLength + j];
       }
-
       commandBufferEndIndex = remainderCount;
+
+      // TODO wait for at least the ISR period
 
       break;
     }    
   }
-
-  busy = false;
 }
