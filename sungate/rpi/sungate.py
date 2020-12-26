@@ -72,9 +72,9 @@ def post():
     print('raw command:', [b for b in cmd])
     encoded = encode(cmd)
     print('encoded', [b for b in encoded])
-    ser.write('trash')
+    ser.write(0xC0FFEE)
     ser.write(encoded)
-    ser.write('rubbish')
+    ser.write(0xDEADBEEF)
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
