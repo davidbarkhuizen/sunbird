@@ -179,7 +179,7 @@ void loop()
         Serial.print(" ");
         Serial.print(commandBuffer[1 + i]);
         Serial.print('\n');
-        Serial.write(commandBuffer);
+        Serial.write(commandBuffer, commandBufferEndIndex);
         continue;
       }
 
@@ -214,7 +214,7 @@ void loop()
       command[2] = d3;
       command[3] = d4;
 
-      Serial.print('GOOD!');
+      Serial.print("GOOD!");
 
       break;
     }    
