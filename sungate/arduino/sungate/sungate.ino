@@ -166,11 +166,13 @@ void loop()
     {
       bool headerOK = (commandBuffer[0 + i] == H1) && (commandBuffer[1 + i] == H2);
       if (!headerOK) {
+        Serial.print("bad header");
         return;
       }
 
       bool expectedLength = (commandBuffer[2 + i] == L);
       if (!expectedLength) {
+        Serial.print("bad L");
         return;
       }
 
@@ -183,6 +185,7 @@ void loop()
 
       bool checksumOK = (d1 + d2 + d3 + d4) % 256 == T;
       if (!checksumOK) {
+        Serial.print("bad checksum");
         return;
       }      
 
