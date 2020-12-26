@@ -95,7 +95,7 @@ try:
         time.sleep(0.1)
 
         charCount = ser.inWaiting()
-        if charCount >= 0:
+        if charCount > 0:
             cmd = ser.read(charCount)        
            
             print([str(x) for x in cmd])
