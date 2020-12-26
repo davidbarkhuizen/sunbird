@@ -48,7 +48,7 @@ app = Flask(__name__)
 
 @app.route('/', methods = ['GET'])
 def get():
-    return 'sunbird-server'
+    return 'sungate ground transmission station'
 
 @app.route('/', methods = ['POST'])
 def post():
