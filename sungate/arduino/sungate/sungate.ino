@@ -169,6 +169,7 @@ void loop()
     commandBufferEndIndex = commandBufferEndIndex + countToRead;
     
     if (commandBufferEndIndex < 8) {
+      busy = false;
       return;
     }
 
