@@ -1,10 +1,10 @@
 #include <TimerOne.h>
  
-int availableBytes;
-byte serialInBuffer[512];
+byte availableBytes;
+byte serialInBuffer[64];
 
-byte commandBuffer[512];
-int commandBufferEndIndex = 0;
+byte commandBuffer[64];
+byte commandBufferEndIndex = 0;
 byte command[4];
 
 const int SERIAL_BAUD_RATE = 9600;
@@ -160,13 +160,13 @@ void loop()
     Serial.print(countToRead);
     Serial.print(" bytes. ");
 
-    Serial.readBytes(serialInBuffer, countToRead);
-    for (int i = 0; i < countToRead; i++)
+    byte countRead = Serial.readBytes(serialInBuffer, countToRead);
+    for (int i = 0; i < countRead; i++)
     {
       commandBuffer[commandBufferEndIndex + i] = serialInBuffer[i];
     }
 
-    commandBufferEndIndex = commandBufferEndIndex + countToRead;
+    commandBufferEndIndex = commandBufferEndIndex + countRead;
     
     if (commandBufferEndIndex < 8) {
       busy = false;
