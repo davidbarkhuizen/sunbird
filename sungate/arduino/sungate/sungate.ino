@@ -156,6 +156,10 @@ void loop()
       countToRead = maxAllowedToRead;
     }
     
+    Serial.print("read ");
+    Serial.print(countToRead);
+    Serial.print(" bytes. ");
+
     Serial.readBytes(serialInBuffer, countToRead);
     for (int i = 0; i < countToRead; i++)
     {
