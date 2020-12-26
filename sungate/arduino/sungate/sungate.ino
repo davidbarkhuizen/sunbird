@@ -173,11 +173,13 @@ void loop()
     {
       bool headerOK = (commandBuffer[0 + i] == H1) && (commandBuffer[1 + i] == H2);
       if (!headerOK) {
-        Serial.print("bad header: ");
+        Serial.print("bad header for i = ");
+        Serial.print(i);
+        Serial.print(" : ");
         Serial.print(commandBuffer[0 + i]);
         Serial.print(" ");
         Serial.print(commandBuffer[1 + i]);
-        Serial.print("\n");
+        Serial.print('\n');
         continue;
       }
 
