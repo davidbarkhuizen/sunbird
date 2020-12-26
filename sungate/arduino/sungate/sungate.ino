@@ -211,6 +211,8 @@ void loop()
       command[1] = d2;
       command[2] = d3;
       command[3] = d4;
+
+      break;
     }    
   }
 

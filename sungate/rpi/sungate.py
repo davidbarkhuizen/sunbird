@@ -31,12 +31,10 @@ print('initialized.')
 
 def encode(data):
 
-    header = [17, 171]
-    length = 4
-
+    header = bytes(17, 171, 4)
     trailer = sum(data) % 256
 
-    return [struct.pack('>B', x)[0] for x in [header[0], header[1], length, *data, trailer]]
+    return [struct.pack('>B', x)[0] for x in [*header, *data, trailer]]
 
 # ------------------------------------------
 
