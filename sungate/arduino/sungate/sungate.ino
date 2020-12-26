@@ -151,10 +151,10 @@ void loop()
     // read as much as we can fit
     
     int countToRead = availableBytes;
-    int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
-    if (countToRead > maxAllowedToRead) {
-      countToRead = maxAllowedToRead;
-    }
+    // int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
+    // if (countToRead > maxAllowedToRead) {
+    //   countToRead = maxAllowedToRead;
+    // }
     
     Serial.print("read ");
     Serial.print(countToRead);
