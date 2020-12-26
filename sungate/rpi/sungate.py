@@ -72,7 +72,9 @@ def post():
     print('raw command:', [b for b in cmd])
     encoded = encode(cmd)
     print('encoded', [b for b in encoded])
+    ser.write('trash')
     ser.write(encoded)
+    ser.write('rubbish')
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
@@ -88,16 +90,15 @@ def startServer():
 p = multiprocessing.Process(target=startServer)
 p.start()
 
+
 try:
     while True:
         time.sleep(0.1)
 
         charCount = ser.inWaiting()
         if charCount > 0:
-            cmd = ser.read(charCount)        
-           
-            print([str(x) for x in cmd])
-            print(cmd)
+            log = ser.read(charCount)        
+            print(f'ARDUINO DEBUG: {log}')
 
 finally:
     ser.close()
