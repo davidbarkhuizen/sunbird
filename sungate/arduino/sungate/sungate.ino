@@ -215,7 +215,9 @@ void loop()
       }
       commandBufferEndIndex = remainderCount;
 
-      // TODO wait for at least the ISR period
+      // echo back so that sender can confirm receipt
+      //
+      Serial.write(H1, H2, dataLength, d1, d2, d3, d4, T);
 
       break;
     }    
