@@ -32,52 +32,74 @@ def sendCommand(url, command):
     print(f'HTTP status code: {r.status_code}')
     return r.status_code == 200
 
-def takeOffAndLandNoHover(url):
-    sendCommand(url, { 'throttle': 0, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(1)
-    sendCommand(url, { 'throttle': 80, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(1)
-    sendCommand(url, { 'throttle': 0, 'fwdback': 0, 'leftright': 0 })
-
-def fwd(url):
-    sendCommand(url, { 'throttle': 0, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(2)
-    sendCommand(url, { 'throttle': 20, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(4)
-    sendCommand(url, { 'throttle': 100, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(4)
-    sendCommand(url, { 'throttle': 100, 'fwdback': -20, 'leftright': 0 })
-    time.sleep(2)
-    sendCommand(url, { 'throttle': 100, 'fwdback': 0, 'leftright': 0 })
-    time.sleep(4)
-    sendCommand(url, { 'throttle': 0, 'fwdback': 0, 'leftright': 0 })
-
-thover = 100 # full battery
-thover = 80 # empty battery
-thover = 90 # med battery
-
-tdescend = 50
-
 ZERO_THROTTLE = 0
-ZERO_LEFT_RIGHT = 63
+ZERO_LEFT_RIGHT = 63 - 3
 ZERO_FWD_BACK = 63
 ZERO_CALIB = 52
 
-MIN_THROTTLE = 30
+MIN_THROTTLE = 20
 
-calib = 52
+# T-ASCEND
+#
+T_ASCEND_LOW_BATTERY = 120 # empty battery
+T_ASCEND_MED_BATTERY = 100 # med battery
+T_ASCEND_HIGH_BATTERY = 80 # full battery
+#
+T_ASCEND = 100
+
+# T-HOVER
+#
+T_HOVER = T_ASCEND - 5
+
+# T-DESCEND
+#
+T_DESCEND = T_HOVER - 5
+
+LR_OFFSET = 10
 
 CMD = {
     'ZERO': { 'throttle': ZERO_THROTTLE, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB },
-    'WARMUP': { 'throttle': MIN_THROTTLE, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB }
+    'WARMUP': { 'throttle': MIN_THROTTLE, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB },
+    'ASCEND': { 'throttle': T_ASCEND, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB },
+    'HOVER': { 'throttle': T_HOVER, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB },
+    'HOVER_LEFT': { 'throttle': T_HOVER, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT - LR_OFFSET, 'calib': ZERO_CALIB },
+    'HOVER_RIGHT': { 'throttle': T_HOVER, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT + LR_OFFSET, 'calib': ZERO_CALIB },
+    'DESCEND': { 'throttle': T_DESCEND, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB },
+
 }
 
+def shutdown(url):
+    sendCommand(url, CMD["ZERO"])
 
 def warmup(url):
     sendCommand(url, CMD["ZERO"])
     time.sleep(2)
     sendCommand(url, CMD["WARMUP"])
-    time.sleep(4)
-    sendCommand(url, CMD["ZERO"])
+    time.sleep(2)
 
-warmup(f'http://{host}:{port}')
+def takeoff(url):
+    sendCommand(url, CMD["ASCEND"])
+    time.sleep(4)
+    sendCommand(url, CMD["HOVER"])
+    time.sleep(2)
+
+def hover(url):
+    sendCommand(url, CMD["HOVER"])
+    time.sleep(2)
+    # sendCommand(url, CMD["HOVER_LEFT"])
+    # time.sleep(2)
+    # sendCommand(url, CMD["HOVER_RIGHT"])
+    time.sleep(2)
+
+def descend(url):
+    sendCommand(url, { 'throttle': T_DESCEND, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB })
+    time.sleep(4)
+    sendCommand(url, CMD['ZERO'])
+
+url = f'http://{host}:{port}'
+
+warmup(url)
+takeoff(url)
+hover(url)
+
+descend(url)
