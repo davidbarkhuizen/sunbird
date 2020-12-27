@@ -155,10 +155,10 @@ void loop()
     // read as much as we can without overflow
     //
     int countToRead = availableBytes;
-    int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
-    if (countToRead > maxAllowedToRead) {
-      countToRead = maxAllowedToRead;
-    }
+    // int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
+    // if (countToRead > maxAllowedToRead) {
+    //   countToRead = maxAllowedToRead;
+    // }
     
     byte countRead = Serial.readBytes(serialInBuffer, countToRead);
     for (int i = 0; i < countRead; i++)
@@ -212,11 +212,11 @@ void loop()
       byte packet[packetLength] = { H1, H2, dataLength, d1, d2, d3, d4, T };
       Serial.write(packet, packetLength);
       
-      // shift contents right of command left, dropping command and preceding bytes
+      // shift contents right of command left, dropping command any preceding bytes
       //
       byte remainderCount = commandBufferEndIndex - (i + packetLength);
       for (byte j = 0; j < remainderCount; j++) {
-        commandBuffer[j] = commandBuffer[i + packetLength + j];
+        commandBuffer[j] = commandBuffer[j + i + packetLength];
       }
       commandBufferEndIndex = remainderCount;
 

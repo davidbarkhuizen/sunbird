@@ -22,8 +22,14 @@ import requests
 import time
 
 def sendCommand(url, command):
-    print(command)
-    r = requests.post(url, json=command)
+    print(f'HTTP POST: {command}')
+    try:
+        r = requests.post(url, json=command)
+    except requests.exceptions.ConnectionError as e:
+        print(e)
+        return False
+        pass
+    print(f'HTTP status code: {r.status_code}')
     return r.status_code == 200
 
 def takeOffAndLandNoHover(url):
@@ -52,16 +58,26 @@ thover = 90 # med battery
 
 tdescend = 50
 
-zeroLR = 30
-zeroLR = 60
+ZERO_THROTTLE = 0
+ZERO_LEFT_RIGHT = 63
+ZERO_FWD_BACK = 63
+ZERO_CALIB = 52
 
-def hover(url):
-    sendCommand(url, { 'throttle': 0, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
+MIN_THROTTLE = 30
+
+calib = 52
+
+CMD = {
+    'ZERO': { 'throttle': ZERO_THROTTLE, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB },
+    'WARMUP': { 'throttle': MIN_THROTTLE, 'fwdback': ZERO_FWD_BACK, 'leftright': ZERO_LEFT_RIGHT, 'calib': ZERO_CALIB }
+}
+
+
+def warmup(url):
+    sendCommand(url, CMD["ZERO"])
     time.sleep(2)
-    sendCommand(url, { 'throttle': 20, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
-    time.sleep(2)
-    sendCommand(url, { 'throttle': thover, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
+    sendCommand(url, CMD["WARMUP"])
     time.sleep(4)
-    sendCommand(url, { 'throttle': 0, 'fwdback': 63, 'leftright': zeroLR, 'calib': 52 })
+    sendCommand(url, CMD["ZERO"])
 
-hover(f'http://{host}:{port}')
+warmup(f'http://{host}:{port}')
