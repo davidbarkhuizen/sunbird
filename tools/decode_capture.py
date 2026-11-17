@@ -15,12 +15,27 @@
 # 11111 10000000 000000000		    0
 # 11111 10000						1
 
+"""Decode captured S107G IR commands into bytes.
+
+Input: a text file, one capture per line, each a string of '0' and '1'
+samples. The bit threshold below (12 samples) depends on the capture's
+sample rate; check it against a known command before trusting the output.
+
+usage: python3 tools/decode_capture.py [path] [--step]
+"""
+
+import argparse
+
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
-fileName = 'input/in.raw'
+parser = argparse.ArgumentParser(description='decode captured S107G IR commands')
+parser.add_argument('path', nargs='?', default='input/in.raw', help='capture file (default input/in.raw)')
+parser.add_argument('--step', action='store_true', help='pause after each capture')
+args = parser.parse_args()
+fileName = args.path
 
 lines = []
 with open(fileName, 'r') as inFile:
@@ -84,5 +99,5 @@ for line in lines:
 
     print(parsed)
 
-    input()
-
+    if args.step:
+        input()
