@@ -114,7 +114,19 @@ Safety: a command is held only while it keeps arriving.
 
 `GET /status` reports the link: the current command, packets sent, echoes received.
 
-Running (from `sungate/`): `./deploy.sh /dev/ttyACM0` uploads the sketch, `./run.sh /dev/ttyACM0` starts the gateway on port 8888, and `python3 control/control.py --host <gateway> --port 8888` flies the take-off, hover and landing sequence. Python dependencies: `pip install -r requirements.txt`.
+Host setup (Linux), once:
+
+- `sudo usermod -aG dialout $USER`, then log out and in: serial ports belong to the `dialout` group.
+- On Ubuntu, `sudo apt remove brltty`: its udev rules claim the CH340 USB-serial chip on most Nano clones, and `/dev/ttyUSB0` vanishes as soon as it appears.
+- Install [arduino-cli](https://arduino.github.io/arduino-cli/), then `arduino-cli core update-index && arduino-cli core install arduino:avr`.
+- `python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt` (from the repo root).
+
+Running (from `sungate/`):
+
+- `./deploy.sh /dev/ttyUSB0` compiles and uploads the sketch. The board defaults to a Nano with the old bootloader; set `FQBN=arduino:avr:nano` (new bootloader) or `FQBN=arduino:avr:uno` if yours differs.
+- `../.venv/bin/python ../tools/link_check.py /dev/ttyUSB0` checks the serial link: it sends zero-throttle packets for 10 s and expects every one echoed back.
+- `./run.sh /dev/ttyUSB0` starts the gateway on port 8888.
+- `python3 control/control.py --host <gateway> --port 8888` flies the take-off, hover and landing sequence.
 
 Tests: `pip install -r requirements-dev.txt && python -m pytest`. They cover the protocol, the link, the gateway and the client, and build and run the firmware's decoder and failsafe on the host with `g++`. CI also compiles the sketch for the Uno.
 
