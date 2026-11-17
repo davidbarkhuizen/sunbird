@@ -29,37 +29,56 @@ ser = serial.Serial(serialInterface, baudRate)
 ser.baudrate = baudRate
 print('initialized.')
 
+def encode(data):
+
+    header = [17, 171, 4]
+    trailer = sum(data) % 256
+
+    return [struct.pack('>B', x)[0] for x in [*header, *data, trailer]]
+
+# ------------------------------------------
+
+def renderCommandByteArray(leftright, fwdback, throttle, calib):
+    '''
+    leftright       byte    0..255
+    fwdback         byte    0..255
+    throttle        byte    0..255
+    calib           byte    0..255
+    '''
+    ords = [leftright, fwdback, throttle, calib]
+    packed = [struct.pack('>B', o)[0] for o in ords]
+    return packed
+
 # ------------------------------------------
 
 app = Flask(__name__)
 
 @app.route('/', methods = ['GET'])
 def get():
-    return 'sunbird-server'
+    return 'sungate ground transmission station'
 
 @app.route('/', methods = ['POST'])
 def post():
 
     j = request.json
-    print(f'command received via HTTP POST: {j}')
+    print(f'HTTP-POST from {request.remote_addr}: {j}')
 
     throttle=j['throttle']
     leftright=j['leftright']
     fwdback=j['fwdback']
     calib=j['calib']
 
-    ords = [leftright, fwdback, throttle, calib]
-    packed = [struct.pack('>B', o)[0] for o in ords]
-    ba = bytearray(packed)
-    ser.write(ba)
-    print('sent:', [b for b in ba])
+    cmd = renderCommandByteArray(leftright, fwdback, throttle, calib)
+    encoded = encode(cmd)
+    print('raw command:', [b for b in cmd], ', encoded: ', encoded)
+    ser.write(encoded)
     
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
 
 # -----------------------------------
 
 print('-' * 80)
-print(f'sunbird-server :{port} -> {serialInterface} ({baudRate} kb/s)')
+print(f'sungate relay station sungate:{port} -> {serialInterface} @ {baudRate} kb/s)')
 print('-' * 80)
 
 def startServer():
@@ -68,15 +87,15 @@ def startServer():
 p = multiprocessing.Process(target=startServer)
 p.start()
 
+
 try:
     while True:
         time.sleep(0.1)
 
         charCount = ser.inWaiting()
-        if charCount >= 4:
-            cmd = ser.read(4)        
-           
-            print([str(x) for x in cmd])
+        if charCount > 0:
+            log = ser.read(charCount)        
+            print(f'echo receipt: ', '.'.join(map(str, log)))
 
 finally:
     ser.close()
