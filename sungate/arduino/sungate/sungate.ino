@@ -1,226 +1,125 @@
-#include <TimerOne.h>
- 
-byte availableBytes;
-byte serialInBuffer[64];
+// sungate: serial -> IR gateway for the Syma S107G.
+//
+// Reads SSSP packets (see sssp.h) from the host and transmits the latest
+// command as IR every 180 ms, after Kerry D Wong's protocol analysis.
+//
+// The IR command is sent from loop(), not from a timer interrupt, so the
+// serial receive interrupt keeps running during the 24-36 ms it takes to
+// send one: incoming bytes queue in the 64-byte serial buffer instead of
+// being lost, and the command is only ever read and written in loop(), so
+// it can't be sent half-updated.
 
-byte commandBuffer[64];
-byte commandBufferEndIndex = 0;
-byte command[4];
+#include "sssp.h"
 
-const int SERIAL_BAUD_RATE = 9600;
+const long SERIAL_BAUD_RATE = 9600;
 
-// ------------------------------
+// comment this out to see the demodulated waveform
+// it is useful for debugging purpose.
+#define MODULATED 1
 
-//comment this out to see the demodulated waveform
-//it is useful for debugging purpose.
-#define MODULATED 1 
- 
 const int IR_PIN = 3;
-const unsigned long DURATION = 180000l;
+const unsigned long COMMAND_INTERVAL_US = 180000UL;
 const int HEADER_DURATION = 2000;
 const int HIGH_DURATION = 380;
 const int ZERO_LOW_DURATION = 220;
 const int ONE_LOW_DURATION = 600;
- 
-void sendHeader()
-{
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, HIGH);
-  #else
-    TCCR2A |= _BV(COM2B1);
-  #endif
-   
+
+// Neutral values as flown (control.py) and as decoded by Wong.
+const uint8_t YAW_NEUTRAL = 60;
+const uint8_t PITCH_NEUTRAL = 63;
+const uint8_t TRIM_DEFAULT = 52;
+
+// No valid packet for this long and the failsafe ramps throttle down,
+// THROTTLE_RAMP_STEP per command (every 180 ms): from a hover throttle
+// of about 95 to 0 in about 3.5 s. Not yet checked on the bench.
+const sssp::Failsafe FAILSAFE = {1000, 5, YAW_NEUTRAL, PITCH_NEUTRAL};
+
+sssp::Decoder decoder;
+uint8_t received[sssp::DATA_LENGTH] = {YAW_NEUTRAL, PITCH_NEUTRAL, 0, TRIM_DEFAULT};
+uint8_t transmitted[sssp::DATA_LENGTH] = {YAW_NEUTRAL, PITCH_NEUTRAL, 0, TRIM_DEFAULT};
+bool everReceived = false;
+unsigned long lastPacketMs = 0;
+unsigned long lastSendUs = 0;
+
+void carrierOn() {
+#ifndef MODULATED
+  digitalWrite(IR_PIN, HIGH);
+#else
+  TCCR2A |= _BV(COM2B1);
+#endif
+}
+
+void carrierOff() {
+#ifndef MODULATED
+  digitalWrite(IR_PIN, LOW);
+#else
+  TCCR2A &= ~_BV(COM2B1);
+#endif
+}
+
+void sendHeader() {
+  carrierOn();
   delayMicroseconds(HEADER_DURATION);
-   
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, LOW);
-  #else
-    TCCR2A &= ~_BV(COM2B1);
-  #endif
-   
+  carrierOff();
   delayMicroseconds(HEADER_DURATION);
-   
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, HIGH);
-  #else
-    TCCR2A |= _BV(COM2B1);
-  #endif
-   
+  carrierOn();
   delayMicroseconds(HIGH_DURATION);
-   
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, LOW);
-  #else
-    TCCR2A &= ~_BV(COM2B1);
-  #endif
+  carrierOff();
 }
- 
-void sendZero()
-{
-  delayMicroseconds(ZERO_LOW_DURATION);
- 
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, HIGH);
-  #else  
-    TCCR2A |= _BV(COM2B1);
-  #endif
-   
+
+void sendBit(bool one) {
+  delayMicroseconds(one ? ONE_LOW_DURATION : ZERO_LOW_DURATION);
+  carrierOn();
   delayMicroseconds(HIGH_DURATION);
-   
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, LOW);
-  #else
-    TCCR2A &= ~_BV(COM2B1);
-  #endif
+  carrierOff();
 }
- 
-void sendOne()
-{
-  delayMicroseconds(ONE_LOW_DURATION);
-   
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, HIGH);
-  #else
-    TCCR2A |= _BV(COM2B1);
-  #endif
-   
-  delayMicroseconds(HIGH_DURATION);
-   
-  #ifndef MODULATED
-    digitalWrite(IR_PIN, LOW);  
-  #else
-    TCCR2A &= ~_BV(COM2B1);
-  #endif
+
+void sendByte(uint8_t value) {
+  for (int i = 7; i >= 0; i--) sendBit((value >> i) & 1);
 }
- 
-void sendByte(byte B) {
-  byte b;
-  for (int i = 7; i >=0; i--)
-  {
-    b = (B & (1 << i)) >> i;    
-    if (b > 0) sendOne(); else sendZero();
-  }
-}
-  
-void sendCommand() {
-  
+
+void sendCommand(const uint8_t* command) {
   sendHeader();
-
-  for (int i = 0; i < 4; i++)
-  {
-    sendByte(command[i]);
-  }
+  for (uint8_t i = 0; i < sssp::DATA_LENGTH; i++) sendByte(command[i]);
 }
 
-void timerISR()
-{
-  sendCommand();
-}
- 
-void setup()
-{
+void setup() {
   // configure the IR pin for output
-  //
   pinMode(IR_PIN, OUTPUT);
   digitalWrite(IR_PIN, LOW);
- 
-  // configure ISR that will drive the PWM
-  //
-  Timer1.initialize(DURATION);
-  Timer1.attachInterrupt(timerISR);
-   
-  // configure PWM
-  // 
-  // PWM = 0.5
-  // f = 38 Khz or || 57 Khz
-  //
-  byte v = 8000 / 38; 
-  TCCR2A = _BV(WGM20);
-  TCCR2B = _BV(WGM22) | _BV(CS20); 
-  OCR2A = v;
-  OCR2B = v / 2; 
 
-  // configure serial port
-  //
+  // configure the carrier PWM on timer 2: duty 0.5, f = 38 kHz
+  // (16 MHz / (2 * 210) = 38.1 kHz, phase correct, OCR2A as top)
+  byte v = 8000 / 38;
+  TCCR2A = _BV(WGM20);
+  TCCR2B = _BV(WGM22) | _BV(CS20);
+  OCR2A = v;
+  OCR2B = v / 2;
+
   Serial.begin(SERIAL_BAUD_RATE);
+  lastSendUs = micros();
 }
 
-void loop()
-{  
-  // if there is at least a byte to read
-  //
-  availableBytes = Serial.available();
-  if (availableBytes > 0) {
+void loop() {
+  // decode whatever has arrived; echo each valid packet so the host can
+  // confirm receipt
+  while (Serial.available() > 0) {
+    if (decoder.feed((uint8_t)Serial.read())) {
+      for (uint8_t i = 0; i < sssp::DATA_LENGTH; i++) received[i] = decoder.data()[i];
+      everReceived = true;
+      lastPacketMs = millis();
 
-    // read as much as we can without overflow
-    //
-    int countToRead = availableBytes;
-    // int maxAllowedToRead = sizeof(commandBuffer) - commandBufferEndIndex;
-    // if (countToRead > maxAllowedToRead) {
-    //   countToRead = maxAllowedToRead;
-    // }
-    
-    byte countRead = Serial.readBytes(serialInBuffer, countToRead);
-    for (int i = 0; i < countRead; i++)
-    {
-      commandBuffer[commandBufferEndIndex + i] = serialInBuffer[i];
+      uint8_t packet[sssp::PACKET_LENGTH];
+      sssp::encode(received, packet);
+      Serial.write(packet, sssp::PACKET_LENGTH);
     }
-    commandBufferEndIndex = commandBufferEndIndex + countRead;
+  }
 
-    byte H1 = 17;
-    byte H2 = 171;
-    byte dataLength = 4;
-    byte packetLength = 2 + 1 + dataLength + 1;
-
-    if (commandBufferEndIndex < 8) {
-      return;
-    }
-
-    for (size_t i = 0; i <= commandBufferEndIndex - (dataLength + 4); i++)
-    {
-      bool headerOK = (commandBuffer[0 + i] == H1) && (commandBuffer[1 + i] == H2);
-      if (!headerOK) {
-        continue;
-      }
-
-      bool expectedLength = (commandBuffer[2 + i] == dataLength);
-      if (!expectedLength) {
-        continue;
-      }
-
-      byte d1 = commandBuffer[3 + i];
-      byte d2 = commandBuffer[4 + i];
-      byte d3 = commandBuffer[5 + i];
-      byte d4 = commandBuffer[6 + i];
-
-      byte T = commandBuffer[3 + dataLength + i];
-
-      bool checksumOK = (d1 + d2 + d3 + d4) % 256 == T;
-      if (!checksumOK) {
-        continue;
-      }
-
-      // extract command
-      //
-      command[0] = d1;
-      command[1] = d2;
-      command[2] = d3;
-      command[3] = d4;
-
-      // echo packet back so that sender can confirm receipt
-      //
-      byte packet[packetLength] = { H1, H2, dataLength, d1, d2, d3, d4, T };
-      Serial.write(packet, packetLength);
-      
-      // shift contents right of command left, dropping command any preceding bytes
-      //
-      byte remainderCount = commandBufferEndIndex - (i + packetLength);
-      for (byte j = 0; j < remainderCount; j++) {
-        commandBuffer[j] = commandBuffer[j + i + packetLength];
-      }
-      commandBufferEndIndex = remainderCount;
-
-      break;
-    }    
+  unsigned long nowUs = micros();
+  if (nowUs - lastSendUs >= COMMAND_INTERVAL_US) {
+    lastSendUs = nowUs;
+    unsigned long sinceMs = everReceived ? millis() - lastPacketMs : FAILSAFE.timeout_ms;
+    sssp::next_transmit(received, sinceMs, FAILSAFE, transmitted);
+    sendCommand(transmitted);
   }
 }
