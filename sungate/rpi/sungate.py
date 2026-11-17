@@ -1,101 +1,100 @@
+"""sungate: HTTP -> serial gateway for the Syma S107G.
+
+POST / with JSON {"leftright", "fwdback", "throttle", "calib"}, each an
+int 0..255 (wire values; see README for neutrals). The command is held
+for --client-timeout seconds; resend it to keep it, or the link stops
+sending and the Arduino's failsafe brings the helicopter down.
+
+GET /status reports the link: current command, packets sent, echoes.
+"""
+
 import argparse
+import threading
 
-from flask import Flask, request, jsonify, json
-import os
+from flask import Flask, jsonify, request
 
-import serial
-import time
-import struct
+import link as link_module
 
-import multiprocessing
-
-parser = argparse.ArgumentParser(description='sunbird control gateway server')
-parser.add_argument('--host', help='host to server as, e.g. 0.0.0.0 or 127.0.0.1')
-parser.add_argument('--port', help='TCIP/IP port to listen on')
-parser.add_argument('--serial', help='linux serial device, e.g. /dev/ttyACM0, /dev/ttyUSB1')
-parser.add_argument('--baud', help='baud rate in bits per second, e.g 9600')
-args = parser.parse_args()
-
-host = args.host 
-port = args.port
-
-# ------------------------------------------
-
-serialInterface = args.serial
-baudRate = args.baud 
-
-print(f'initializing serial connection...')
-ser = serial.Serial(serialInterface, baudRate)
-ser.baudrate = baudRate
-print('initialized.')
-
-def encode(data):
-
-    header = [17, 171, 4]
-    trailer = sum(data) % 256
-
-    return [struct.pack('>B', x)[0] for x in [*header, *data, trailer]]
-
-# ------------------------------------------
-
-def renderCommandByteArray(leftright, fwdback, throttle, calib):
-    '''
-    leftright       byte    0..255
-    fwdback         byte    0..255
-    throttle        byte    0..255
-    calib           byte    0..255
-    '''
-    ords = [leftright, fwdback, throttle, calib]
-    packed = [struct.pack('>B', o)[0] for o in ords]
-    return packed
-
-# ------------------------------------------
-
-app = Flask(__name__)
-
-@app.route('/', methods = ['GET'])
-def get():
-    return 'sungate ground transmission station'
-
-@app.route('/', methods = ['POST'])
-def post():
-
-    j = request.json
-    print(f'HTTP-POST from {request.remote_addr}: {j}')
-
-    throttle=j['throttle']
-    leftright=j['leftright']
-    fwdback=j['fwdback']
-    calib=j['calib']
-
-    cmd = renderCommandByteArray(leftright, fwdback, throttle, calib)
-    encoded = encode(cmd)
-    print('raw command:', [b for b in cmd], ', encoded: ', encoded)
-    ser.write(encoded)
-    
-    return json.dumps({'success':True}), 200, {'ContentType':'application/json'} 
-
-# -----------------------------------
-
-print('-' * 80)
-print(f'sungate relay station sungate:{port} -> {serialInterface} @ {baudRate} kb/s)')
-print('-' * 80)
-
-def startServer():
-    app.run(host, port)
-
-p = multiprocessing.Process(target=startServer)
-p.start()
+FIELDS = ('leftright', 'fwdback', 'throttle', 'calib')  # wire order
 
 
-try:
-    while True:
-        time.sleep(0.1)
+def parse_command(j):
+    """Returns the 4 wire bytes from a JSON command, or raises ValueError."""
+    if not isinstance(j, dict):
+        raise ValueError('expected a JSON object')
+    missing = [f for f in FIELDS if f not in j]
+    if missing:
+        raise ValueError(f'missing fields: {", ".join(missing)}')
+    command = []
+    for f in FIELDS:
+        value = j[f]
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 255:
+            raise ValueError(f'{f} must be an int in 0..255, got {value!r}')
+        command.append(value)
+    return command
 
-        charCount = ser.inWaiting()
-        if charCount > 0:
-            log = ser.read(charCount)        
-            print(f'echo receipt: ', '.'.join(map(str, log)))
 
-finally:
-    ser.close()
+def create_app(link):
+    app = Flask(__name__)
+
+    @app.route('/', methods=['GET'])
+    def get():
+        return 'sungate ground transmission station'
+
+    @app.route('/status', methods=['GET'])
+    def status():
+        return jsonify(link.status())
+
+    @app.route('/', methods=['POST'])
+    def post():
+        j = request.get_json(silent=True)
+        print(f'HTTP-POST from {request.remote_addr}: {j}')
+        try:
+            command = parse_command(j)
+        except ValueError as e:
+            return jsonify({'success': False, 'error': str(e)}), 400
+        link.set_command(command)
+        return jsonify({'success': True})
+
+    return app
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description='sunbird control gateway server')
+    parser.add_argument('--host', default='127.0.0.1', help='host to serve as, e.g. 0.0.0.0 or 127.0.0.1')
+    parser.add_argument('--port', type=int, default=8888, help='TCP/IP port to listen on')
+    parser.add_argument('--serial', required=True, help='linux serial device, e.g. /dev/ttyACM0, /dev/ttyUSB1')
+    parser.add_argument('--baud', type=int, default=9600, help='baud rate in bits per second')
+    parser.add_argument('--keepalive', type=float, default=0.2,
+                        help='seconds between resends of the current command (firmware failsafe: 1 s)')
+    parser.add_argument('--client-timeout', type=float, default=1.0,
+                        help='seconds a command is held without a resend from the client')
+    args = parser.parse_args(argv)
+
+    import serial  # here so tests import this module without pyserial's port
+
+    print('initializing serial connection...')
+    # Opening the port resets most Arduinos; packets sent while the
+    # bootloader runs (~2 s) are lost and replaced by the keepalive.
+    port = serial.Serial(args.serial, args.baud, timeout=0)
+    print('initialized.')
+
+    link = link_module.Link(port, keepalive_s=args.keepalive, client_timeout_s=args.client_timeout)
+    stop = threading.Event()
+    thread = threading.Thread(target=link.run, args=(stop,), daemon=True)
+    thread.start()
+
+    print('-' * 80)
+    print(f'sungate relay station sungate:{args.port} -> {args.serial} @ {args.baud} baud')
+    print('-' * 80)
+
+    try:
+        create_app(link).run(args.host, args.port, threaded=True)
+    finally:
+        stop.set()
+        thread.join(timeout=1)
+        port.close()
+
+
+if __name__ == '__main__':
+    main()

@@ -92,6 +92,31 @@ Links
 
 #### Development of an Arduino-based IR Control Gateway Module
 
+`sungate` relays commands from HTTP to the helicopter:
+
+```
+control.py  --HTTP POST {leftright, fwdback, throttle, calib}-->  rpi/sungate.py (gateway)
+            --SSSP packets over serial, 9600 baud-->  arduino/sungate (Arduino Uno)
+            --IR, 38 kHz, a command every 180 ms-->  S107G
+```
+
+Serial packets (SSSP, `arduino/sungate/sssp.h` and `rpi/sssp.py`): `17, 171, 4`, the 4 command bytes in wire order (leftright, fwdback, throttle, calib), then their sum mod 256. The Arduino decodes byte by byte and echoes each valid packet back; junk or a damaged packet is dropped and the decoder waits for the next header.
+
+The Arduino sends the IR command from `loop()`, not from a timer interrupt, so serial bytes keep arriving while a command is on the air.
+
+Safety: a command is held only while it keeps arriving.
+
+- `control.py` resends the current command every 0.25 s (`hold()`); Ctrl-C sends throttle 0.
+- The gateway resends it to the Arduino every 0.2 s, but only while the client keeps resending it (`--client-timeout`, default 1 s); then it goes quiet.
+- After 1 s with no valid packet, the Arduino's failsafe sets yaw and pitch to neutral and lowers throttle by 5 per command (to 0 from a hover in about 3.5 s). The ramp rate is not yet checked on the bench.
+
+`GET /status` reports the link: the current command, packets sent, echoes received.
+
+Running (from `sungate/`): `./deploy.sh /dev/ttyACM0` uploads the sketch, `./run.sh /dev/ttyACM0` starts the gateway on port 8888, and `python3 control/control.py --host <gateway> --port 8888` flies the take-off, hover and landing sequence. Python dependencies: `pip install -r requirements.txt`.
+
+Tests: `pip install -r requirements-dev.txt && python -m pytest`. They cover the protocol, the link, the gateway and the client, and build and run the firmware's decoder and failsafe on the host with `g++`. CI also compiles the sketch for the Uno.
+
+
 IR on the RPi
 * https://projects.raspberrypi.org/en/projects/infrared-bird-box/6  
 * https://www.raspberrypi.org/forums/viewtopic.php?t=117580  
