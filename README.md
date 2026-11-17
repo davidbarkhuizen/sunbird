@@ -57,42 +57,35 @@ This model is [available from amazon.com](https://www.amazon.com/s?k=Syma+S107G)
 
 [Kerry D Wong](http://www.kerrywong.com/about/) - who reverse engineered the IR communications protocol used by the Syma S107G, built a reference control circuit that implements that protocol, and then [made her research publicly available](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/):
 
-The protocol supports two kHz channels: 38 kHz or 57 kHz.
+The transmitter works on one of two channels, A or B, with a 38 kHz or 57 kHz carrier (50% duty cycle). Every command repeats continuously; Wong measured an interval of 184 ms from the stock remote, and the reference sketch sends one every 180 ms.
 
-- command signals are sent at 184 ms intervals.  
-- the IR signal is modulated at roughly 38 kHz
-- the carrier waveform has a duty cycle of 50%
-- each control signal consists of 34 pulses
-  - two-pulse (bit) header (1x2=2)
-  - 4 bytes of data (4*8=32)
-- ones and zeros are distinguished by the duration of the low
-  
-Common to Both Channels
-parameter|value
----------|-----
-Header High Duration|2.04 ms|2.04 ms
-Header Low Duration|2 us|2 us
-Pulse width|380 us|380 us
-Low duration for 0|220 us|220 us
-  
-Differing by Channel
-parameter|38kHz|57kHz
+Each command is 34 pulses: a two-pulse header, then 4 bytes of data, most significant bit first. Every pulse is the same width; a bit's value is set by the length of the low before it.
+
+Timing (from Wong's measurements and reference sketch):
+
+parameter|38 kHz (channel A)|57 kHz (channel B)
 ---------|-----|-----
-Command duration|180 ms|160 ms
-Low duration for 1|600 us|660 us
+header high|2 ms|2 ms
+header low|2 ms|2 ms
+pulse width (high)|380 us|380 us
+low before a 0|220 us|220 us
+low before a 1|600 us|660 us
+command interval|180 ms|160 ms
 
-The 4-byte control signal contains 4 components:
+Wong's article prints the header low as "2 us"; the sketch uses 2000 us, so it is 2 ms. Wong's published sketch also pairs a 57 kHz carrier with the 38 kHz bit timings; `sungate` uses 38 kHz throughout.
 
-byte|parameter|rotor|range
-----|---------|-----|-----
-1|rotate|main|-64..63
-2|thrust|rear|-128..127
-3|lift|main|0..255
-4|offset|main|0.255
+The 4 data bytes, with the values Wong decoded from the stock remote:
 
-- lift (up/down)
-- thrust (forward/back)
-- rotation (clockwise, counter-clockwise)
+byte|control|stock remote values|neutral
+----|-------|-------------------|-------
+1|yaw (rotate left/right)|8 (full right) .. 106 (full left)|60
+2|pitch (forward/back)|1 (full forward) .. 126 (full back)|63
+3|throttle (main rotor speed)|139 (~0%) .. 253 (100%)|-
+4|trim (yaw calibration knob)|52 as captured; raises when turned right|52
+
+Open question: the stock remote's throttle byte always had its top bit set (139..253), while `control.py` hovers with throttle 80..100 (top bit clear). The top bit may encode the channel. Capturing the stock remote on both channels with `tools/decode_capture.py` would settle it.
+
+The signed ranges in Wong's sketch (-64..63, -128..127) are its potentiometer conversions, which the sketch adds to the neutrals; they are not values on the wire.
 
 Links
 * [kerry-d-wong](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/)
