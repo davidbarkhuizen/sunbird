@@ -135,3 +135,6 @@ Driving a Hi-Power Current From the Arduino With a MOSFET NPN Transistor
 
 ESP32
 * [multi-core operation](https://www.youtube.com/watch?v=k_D_Qu0cgu8)
+## Licence
+
+MIT; see [LICENSE](LICENSE). It covers this project's own code and documentation. The files under `reference/` (Kerry D Wong's sketch and circuit, the component datasheets, the Arduino pinout diagrams) belong to their authors and are not covered by it.
