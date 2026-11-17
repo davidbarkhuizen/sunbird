@@ -96,11 +96,13 @@ Links
 
 ```
 control.py  --HTTP POST {leftright, fwdback, throttle, calib}-->  rpi/sungate.py (gateway)
-            --SSSP packets over serial, 9600 baud-->  arduino/sungate (Arduino Uno)
+            --SSSP packets over serial, 9600 baud-->  arduino/sungate (Arduino Nano)
             --IR, 38 kHz, a command every 180 ms-->  S107G
 ```
 
 Serial packets (SSSP, `arduino/sungate/sssp.h` and `rpi/sssp.py`): `17, 171, 4`, the 4 command bytes in wire order (leftright, fwdback, throttle, calib), then their sum mod 256. The Arduino decodes byte by byte and echoes each valid packet back; junk or a damaged packet is dropped and the decoder waits for the next header.
+
+The transmitter circuit (Nano, TIP122, four IR LEDs) is in [docs/circuit.md](docs/circuit.md).
 
 The Arduino sends the IR command from `loop()`, not from a timer interrupt, so serial bytes keep arriving while a command is on the air.
 
