@@ -4,7 +4,7 @@
 
 ### Kerry D Wong
 
-This project draws heavily on work done by [Kerry D Wong](http://www.kerrywong.com/about/) - who reverse engineered the IR communications protocol used by the Syma S107G, built a reference control circuit that implements that protocol, and then [made her research publicly available](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/).
+This project draws heavily on the work of [Kerry D Wong](http://www.kerrywong.com/about/), who reverse engineered the IR communications protocol used by the Syma S107G, built a reference control circuit that implements it, and [published the analysis](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/).
 
 ## Goals
 
@@ -27,7 +27,7 @@ This project draws heavily on work done by [Kerry D Wong](http://www.kerrywong.c
   * sample space dimensions
     * absolute grid position  
     * relative orientation  
-5. ML using feedback
+* ML using feedback
 
 ## OEM Drone Specification
 
@@ -55,7 +55,7 @@ This model is [available from amazon.com](https://www.amazon.com/s?k=Syma+S107G)
 
 #### Reverse Engineering & Analysis of Infra Red Communications
 
-[Kerry D Wong](http://www.kerrywong.com/about/) - who reverse engineered the IR communications protocol used by the Syma S107G, built a reference control circuit that implements that protocol, and then [made her research publicly available](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/):
+The protocol below is from [Kerry D Wong's analysis](http://www.kerrywong.com/2012/08/27/reverse-engineering-the-syma-s107g-ir-protocol/) and reference sketch.
 
 The transmitter works on one of two channels, A or B, with a 38 kHz or 57 kHz carrier (50% duty cycle). Every command repeats continuously; Wong measured an interval of 184 ms from the stock remote, and the reference sketch sends one every 180 ms.
 
@@ -130,25 +130,25 @@ Running (from `sungate/`):
 
 Tests: `pip install -r requirements-dev.txt && python -m pytest`. They cover the protocol, the link, the gateway and the client, and build and run the firmware's decoder and failsafe on the host with `g++`. CI also compiles the sketch for the Uno.
 
+## References
 
-IR on the RPi
-* https://projects.raspberrypi.org/en/projects/infrared-bird-box/6  
-* https://www.raspberrypi.org/forums/viewtopic.php?t=117580  
-* https://raspberrypi.stackexchange.com/questions/4308/how-to-attach-a-ir-led-to-a-gpio-port  
-* https://www.hackster.io/austin-stanton/creating-a-raspberry-pi-universal-remote-with-lirc-2fd581#toc-step-2--circuit-1  
+Background reading collected along the way; none of it is needed to build or run `sungate`.
 
-Driving a Hi-Power Current From the Arduino With a MOSFET NPN Transistor
+IR on the Raspberry Pi
+* https://projects.raspberrypi.org/en/projects/infrared-bird-box/6
+* https://www.raspberrypi.org/forums/viewtopic.php?t=117580
+* https://raspberrypi.stackexchange.com/questions/4308/how-to-attach-a-ir-led-to-a-gpio-port
+* https://www.hackster.io/austin-stanton/creating-a-raspberry-pi-universal-remote-with-lirc-2fd581#toc-step-2--circuit-1
+
+Driving a high-current load from the Arduino with a transistor
 * https://bildr.org/2012/03/rfp30n06le-arduino/
 * https://www.instructables.com/Arduino-Tutorial-Handling-High-Power-Devices/
 * https://www.raspberrypi.org/forums/viewtopic.php?t=180944
 * https://itp.nyu.edu/physcomp/labs/motors-and-transistors/using-a-transistor-to-control-high-current-loads-with-an-arduino/
 
-## References
-
-### Topic Links
-
 ESP32
 * [multi-core operation](https://www.youtube.com/watch?v=k_D_Qu0cgu8)
+
 ## Licence
 
 MIT; see [LICENSE](LICENSE). It covers this project's own code and documentation. The files under `reference/` (Kerry D Wong's sketch and circuit, the component datasheets, the Arduino pinout diagrams) belong to their authors and are not covered by it.
