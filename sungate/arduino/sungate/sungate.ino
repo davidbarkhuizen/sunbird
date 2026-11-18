@@ -31,7 +31,8 @@ const uint8_t TRIM_DEFAULT = 52;
 
 // No valid packet for this long and the failsafe ramps throttle down,
 // THROTTLE_RAMP_STEP per command (every 180 ms): from a hover throttle
-// of about 95 to 0 in about 3.5 s. Not yet checked on the bench.
+// of about 95 to 0 in about 3.5 s. Checked on the bench 2026-11-18
+// (from throttle 80; see README, Bench results).
 const sssp::Failsafe FAILSAFE = {1000, 5, YAW_NEUTRAL, PITCH_NEUTRAL};
 
 sssp::Decoder decoder;

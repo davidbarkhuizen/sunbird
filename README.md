@@ -83,7 +83,7 @@ byte|control|stock remote values|neutral
 3|throttle (main rotor speed)|139 (~0%) .. 253 (100%)|-
 4|trim (yaw calibration knob)|52 as captured; raises when turned right|52
 
-Open question: the stock remote's throttle byte always had its top bit set (139..253), while `control.py` hovers with throttle 80..100 (top bit clear). The top bit may encode the channel. Capturing the stock remote on both channels with `tools/decode_capture.py` would settle it.
+Open question: the stock remote's throttle byte always had its top bit set (139..253), while `control.py` hovers with throttle 80..100 (top bit clear). The top bit may encode the channel. Capturing the stock remote on both channels with `tools/decode_capture.py` would settle it. On the bench (2026-11-18), channel A at 38 kHz with the top bit clear drives the rotor from throttle 16 up.
 
 The signed ranges in Wong's sketch (-64..63, -128..127) are its potentiometer conversions, which the sketch adds to the neutrals; they are not values on the wire.
 
@@ -110,7 +110,7 @@ Safety: a command is held only while it keeps arriving.
 
 - `control.py` resends the current command every 0.25 s (`hold()`); Ctrl-C sends throttle 0.
 - The gateway resends it to the Arduino every 0.2 s, but only while the client keeps resending it (`--client-timeout`, default 1 s); then it goes quiet.
-- After 1 s with no valid packet, the Arduino's failsafe sets yaw and pitch to neutral and lowers throttle by 5 per command (to 0 from a hover in about 3.5 s). The ramp rate is not yet checked on the bench.
+- After 1 s with no valid packet, the Arduino's failsafe sets yaw and pitch to neutral and lowers throttle by 5 per command (to 0 from a hover in about 3.5 s). Checked on the bench; see Bench results.
 
 `GET /status` reports the link: the current command, packets sent, echoes received.
 
@@ -126,9 +126,20 @@ Running (from `sungate/`):
 - `./deploy.sh /dev/ttyUSB0` compiles and uploads the sketch. The board defaults to a Nano with the old bootloader; set `FQBN=arduino:avr:nano` (new bootloader) or `FQBN=arduino:avr:uno` if yours differs.
 - `../.venv/bin/python ../tools/link_check.py /dev/ttyUSB0` checks the serial link: it sends zero-throttle packets for 10 s and expects every one echoed back.
 - `./run.sh /dev/ttyUSB0` starts the gateway on port 8888.
+- `../.venv/bin/python ../tools/throttle_steps.py 0 10 20 30 --hold 10` steps the throttle through those levels via the gateway, printing a timestamp at each, then sends 0. `touch ~/sunbird-runs/STOP` ends a run early at throttle 0.
 - `python3 control/control.py --host <gateway> --port 8888` flies the take-off, hover and landing sequence.
 
 Tests: `pip install -r requirements-dev.txt && python -m pytest`. They cover the protocol, the link, the gateway and the client, and build and run the firmware's decoder and failsafe on the host with `g++`. CI also compiles the sketch for the Uno.
+
+#### Bench results
+
+Measured 2026-11-18 with the gateway on a Raspberry Pi 5, the transmitter circuit in [docs/circuit.md](docs/circuit.md), a freshly charged battery, and the helicopter held down. The helicopter answers the S107G protocol on channel A; its exact model was not recorded.
+
+- Aim: the four LEDs must point at the helicopter. Before they were reoriented, no throttle up to 127 moved the rotor; after, it responded from 16.
+- Link: `tools/link_check.py` echoed 100 of 100 packets; gateway runs echoed every command.
+- Rotor threshold (`tools/throttle_steps.py`, 10 s per level): still at 14 or below, twitching at about 16, spinning steadily at about 20. This matches the 2020 note in `control.py` (T = 20 spins without take-off). The values are within one step: the observer's call reached the operator a few seconds after the rotor changed.
+- Take-off throttle: 80 spun the rotor up; lift was not tried, since the helicopter was held down.
+- Failsafe: from throttle 80, with the client and gateway gone quiet, the observer saw the rotor slow and stop as designed (by eye, not timed). By design it holds about 2 s after the client's last command (the gateway's 1 s hold, then the firmware's 1 s timeout), then ramps down by 5 per command: from 80, stopped about 5 s after the last command.
 
 ## References
 
